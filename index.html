@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Николай Зеленин — Product Manager</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    line-height: 1.6;
+    padding: 40px 20px;
+  }
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    padding: 48px 56px 40px;
+  }
+  .header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .header .role {
+    font-size: 20px;
+    font-weight: 500;
+    color: #a0aec0;
+    margin: 4px 0 16px;
+  }
+  .header .contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    font-size: 14px;
+    color: #cbd5e0;
+  }
+  .header .contacts a {
+    color: #cbd5e0;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .header .contacts a:hover { color: #fff; }
+  .header .tagline {
+    display: inline-block;
+    margin-top: 16px;
+    background: rgba(255,255,255,0.1);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #a0aec0;
+  }
+  .body { padding: 40px 56px 48px; }
+  .section { margin-bottom: 36px; }
+  .section:last-child { margin-bottom: 0; }
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #718096;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #edf2f7;
+  }
+  .summary {
+    font-size: 15px;
+    color: #4a5568;
+    line-height: 1.7;
+  }
+  .job { margin-bottom: 28px; }
+  .job:last-child { margin-bottom: 0; }
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-bottom: 4px;
+  }
+  .job-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+  .job-meta {
+    font-size: 13px;
+    color: #718096;
+    white-space: nowrap;
+  }
+  .job-company {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+    margin-bottom: 10px;
+  }
+  .job-duties {
+    list-style: none;
+    padding: 0;
+  }
+  .job-duties li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #4a5568;
+  }
+  .job-duties li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 10px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #cbd5e0;
+  }
+  .results {
+    margin-top: 10px;
+    padding: 12px 16px;
+    background: #f7fafc;
+    border-radius: 8px;
+    border-left: 3px solid #1a1a2e;
+  }
+  .results-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+  .results-list {
+    list-style: none;
+    padding: 0;
+  }
+  .results-list li {
+    position: relative;
+    padding-left: 16px;
+    font-size: 13px;
+    color: #4a5568;
+    margin-bottom: 2px;
+  }
+  .results-list li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: #a0aec0;
+  }
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+  }
+  .skill-group { font-size: 14px; }
+  .skill-group strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 2px;
+  }
+  .skill-group span {
+    color: #4a5568;
+    line-height: 1.5;
+  }
+  .edu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .edu-item + .edu-item { margin-top: 8px; }
+  .edu-name { font-weight: 600; font-size: 14px; color: #1a1a2e; }
+  .edu-detail { font-size: 14px; color: #4a5568; }
+  .edu-date { font-size: 13px; color: #718096; white-space: nowrap; }
+  .cert-list, .proj-list {
+    list-style: none;
+    padding: 0;
+  }
+  .cert-list li, .proj-list li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: #4a5568;
+  }
+  .cert-list li::before, .proj-list li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 10px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #cbd5e0;
+  }
+  .extra {
+    font-size: 14px;
+    color: #4a5568;
+    line-height: 1.7;
+  }
+  @media (max-width: 640px) {
+    .header { padding: 32px 24px 28px; }
+    .body { padding: 28px 24px 32px; }
+    .header h1 { font-size: 28px; }
+    .skills-grid { grid-template-columns: 1fr; }
+    .job-header { flex-direction: column; align-items: flex-start; }
+  }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { box-shadow: none; border-radius: 0; }
+    .section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>Николай Зеленин</h1>
+    <div class="role">Product Manager</div>
+    <div class="contacts">
+      <span>+7 (937) 581-87-88</span>
+      <a href="mailto:i@nzelenin.ru">i@nzelenin.ru</a>
+      <span>Удаленная работа / Готов к переезду</span>
+    </div>
+    <div class="tagline">B2B SaaS · Data-Driven · MVP from scratch</div>
+  </div>
+
+  <div class="body">
+    <div class="section">
+      <div class="section-title">Суммари</div>
+      <div class="summary">
+        Продакт-менеджер с опытом более 2 лет в B2B SaaS-продуктах (1С, Битрикс) и запуске IT-стартапов. Специализируюсь на проверке продуктовых гипотез, CustDev, A/B-тестировании и выстраивании data-driven стратегий. Имею практический опыт создания MVP с нуля, управления кросс-функциональными командами и запуска фич, кратно увеличивающих retention и конверсию. Запустил 15+ релизов, улучшил NPS с 32 до 54, увеличил Monthly Active Users на 40%.
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Опыт работы</div>
+
+      <div class="job">
+        <div class="job-header">
+          <span class="job-title">Product Manager</span>
+          <span class="job-meta">Март 2023 — Настоящее время</span>
+        </div>
+        <div class="job-company">Первый Бит (Международный интегратор IT-решений, 9000+ сотрудников)</div>
+        <ul class="job-duties">
+          <li>Управлял продуктовой командой из 3 разработчиков, дизайнера и аналитика.</li>
+          <li>Разработал и приоритизировал бэклог через RICE-фреймворк; закрыл 120+ задач за год.</li>
+          <li>Провёл 50+ глубинных интервью с пользователями (CustDev), выявил ключевые боли, что привело к разработке и запуску модуля «Умный КПП» (сквозная система верификации въезжающего транспорта на территорию предприятия).</li>
+          <li>Инициировал и провёл A/B-тесты (8 экспериментов, 3 статистически значимых результата).</li>
+          <li>Настроил систему сбора продуктовых метрик: DAU/MAU, Retention (Day 1/7/30), LTV, Churn Rate.</li>
+        </ul>
+        <div class="results">
+          <div class="results-title">Ключевые результаты</div>
+          <ul class="results-list">
+            <li>Повысил Week-1 Retention с 22% до 38%.</li>
+            <li>Сократил Time-to-Value с 14 до 5 дней.</li>
+            <li>Увеличил MAU на 40% за 6 месяцев.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="job">
+        <div class="job-header">
+          <span class="job-title">Маркетолог</span>
+          <span class="job-meta">Сентябрь 2022 — Февраль 2023</span>
+        </div>
+        <div class="job-company">Ленлифт (Производство, 50 сотрудников)</div>
+        <ul class="job-duties">
+          <li>Проводил конкурентный анализ рынка и сегментацию целевой B2B-аудитории.</li>
+          <li>Отвечал за лидогенерацию и performance-маркетинг: оптимизировал воронку продаж, что позволило снизить стоимость привлечения клиента (CAC) на 15%.</li>
+          <li>Участвовал в формировании ценностного предложения (Value Proposition) и позиционирования новой линейки оборудования.</li>
+          <li>Внедрил систему сквозной аналитики для отслеживания эффективности каналов привлечения.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Навыки</div>
+      <div class="skills-grid">
+        <div class="skill-group">
+          <strong>Продуктовые фреймворки</strong>
+          <span>CustDev, JTBD, CJM, A/B-тестирование, Unit-экономика, RICE/ICE-scoring</span>
+        </div>
+        <div class="skill-group">
+          <strong>Аналитика</strong>
+          <span>Amplitude, Яндекс.Метрика, Google Analytics 4, Excel/Google Sheets (сводные таблицы), базовый SQL</span>
+        </div>
+        <div class="skill-group">
+          <strong>Управление и проектирование</strong>
+          <span>Jira, Confluence, Trello, Figma, Miro, Notion</span>
+        </div>
+        <div class="skill-group">
+          <strong>Техническая грамотность</strong>
+          <span>Понимание архитектуры веб-приложений и REST API, практический опыт работы с AI-инструментами разработки (Cursor, Trae) для быстрого прототипирования</span>
+        </div>
+        <div class="skill-group" style="grid-column: 1/-1;">
+          <strong>Методологии</strong>
+          <span>Agile, Scrum, Kanban, Lean Startup</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Образование</div>
+      <div class="edu-item">
+        <span class="edu-name">РАНХиГС</span>
+        <span class="edu-date">2021 — 2026</span>
+      </div>
+      <div class="edu-detail" style="margin-top: 2px;">Российская академия народного хозяйства и государственной службы · Специальность: Таможенное дело (защита диплома — июнь 2026 г.)</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Курсы и сертификаты</div>
+      <ul class="cert-list">
+        <li>Резидент стартап-программы «Сбер Акселератор» (2026)</li>
+        <li>Product Manager (Яндекс.Практикум, 2023)</li>
+        <li>SQL для анализа данных (Stepik, 2023)</li>
+        <li>Google Analytics Individual Qualification (2024)</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Проекты (Pet-projects / Кейсы)</div>
+      <ul class="proj-list">
+        <li>Стартап Accord: Успешно собрал и задеплоил функциональный MVP веб-платформы на GitHub Pages.</li>
+        <li>Разработал концепцию компьютерной игры для студенческого хакатона (собрал MVP за 24 часа, 2-е место).</li>
+        <li>Веду авторский блог о стартапах и технологическом предпринимательстве.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Дополнительно</div>
+      <div class="extra">
+        <strong>Английский:</strong> Intermediate (читаю техническую документацию, провожу рабочие созвоны).<br>
+        <strong>Менторство:</strong> регулярно консультирую школьников по вопросам базового предпринимательства.
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

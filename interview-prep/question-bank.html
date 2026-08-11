@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Банк вопросов — системный аналитик, финтех</title>
+<style>
+  :root{
+    --bg:#0f1115; --card:#171a21; --card2:#1d2129; --line:#2a2f3a;
+    --tx:#e6e8ec; --dim:#9aa3b2; --acc:#5b9dff; --ok:#3ecf8e; --warn:#ffb454;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:28px 18px 80px}
+  h1{font-size:24px;margin:0 0 6px}
+  .sub{color:var(--dim);font-size:14px;margin-bottom:22px}
+  .bar{position:sticky;top:0;background:rgba(15,17,21,.94);backdrop-filter:blur(8px);
+    padding:12px 0 12px;border-bottom:1px solid var(--line);margin-bottom:18px;z-index:5}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .chip{border:1px solid var(--line);background:var(--card);color:var(--dim);
+    padding:5px 11px;border-radius:99px;font-size:13px;cursor:pointer;user-select:none}
+  .chip:hover{border-color:var(--acc);color:var(--tx)}
+  .chip.on{background:var(--acc);border-color:var(--acc);color:#08121f;font-weight:600}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input[type=search]{flex:1;min-width:180px;background:var(--card);border:1px solid var(--line);
+    color:var(--tx);padding:8px 12px;border-radius:8px;font-size:14px;outline:none}
+  input[type=search]:focus{border-color:var(--acc)}
+  .btn{background:var(--card);border:1px solid var(--line);color:var(--dim);
+    padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer}
+  .btn:hover{border-color:var(--acc);color:var(--tx)}
+  .stat{color:var(--dim);font-size:13px;margin-left:auto}
+  .q{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    margin-bottom:10px;overflow:hidden}
+  .q.open{border-color:#3a4a63}
+  .qh{padding:13px 15px;cursor:pointer;display:flex;gap:11px;align-items:flex-start}
+  .qh:hover{background:var(--card2)}
+  .num{color:var(--dim);font-size:12px;min-width:26px;padding-top:2px;font-variant-numeric:tabular-nums}
+  .qt{flex:1}
+  .qt b{font-weight:600}
+  .en{display:block;color:var(--dim);font-size:13px;font-style:italic;margin-top:3px}
+  .tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:5px;
+    padding:2px 7px;white-space:nowrap;align-self:flex-start;margin-top:2px}
+  .a{display:none;padding:2px 15px 16px 52px;border-top:1px solid var(--line);
+    background:var(--card2)}
+  .q.open .a{display:block}
+  .a p{margin:11px 0}
+  .a ul{margin:9px 0;padding-left:20px}
+  .a li{margin:4px 0}
+  .a code{background:#0d1017;border:1px solid var(--line);padding:1px 5px;
+    border-radius:4px;font-size:13px;color:#9ecbff}
+  .a pre{background:#0d1017;border:1px solid var(--line);padding:11px 13px;
+    border-radius:8px;overflow-x:auto;font-size:13px;color:#9ecbff;margin:10px 0}
+  .a pre code{background:none;border:none;padding:0}
+  .key{color:var(--ok);font-weight:600}
+  .trap{color:var(--warn)}
+  .enbox{margin-top:12px;padding:10px 13px;background:#0d1017;border-left:2px solid var(--acc);
+    border-radius:0 6px 6px 0;font-size:13.5px;color:#c8d3e3}
+  .enbox b{color:var(--acc);font-size:11px;letter-spacing:.5px;display:block;margin-bottom:5px}
+  .sec{margin:26px 0 12px;font-size:13px;color:var(--dim);text-transform:uppercase;
+    letter-spacing:.9px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  .hide{display:none!important}
+  footer{margin-top:40px;color:var(--dim);font-size:13px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Банк вопросов — системный аналитик</h1>
+  <div class="sub">Финтех / бигтех, уровень junior–middle. Кликни вопрос, чтобы раскрыть ответ.
+  В каждом ответе — <span style="color:var(--ok)">ключевая формулировка</span>, которую ждёт интервьюер,
+  и <span style="color:var(--warn)">типичная ловушка</span>. Внизу ответа — английские формулировки.</div>
+
+  <div class="bar">
+    <div class="chips" id="chips"></div>
+    <div class="row">
+      <input type="search" id="search" placeholder="Поиск по вопросам и ответам…">
+      <button class="btn" id="expand">Раскрыть все</button>
+      <button class="btn" id="collapse">Свернуть</button>
+      <span class="stat" id="stat"></span>
+    </div>
+  </div>
+
+  <div id="list"></div>
+
+  <footer>
+    Порядок подготовки: SQL → API → асинхрон → моделирование → домен → поведенческие.
+    Если времени мало, блоки «SQL», «API и интеграции» и «Асинхрон» дают около 70% техсобеса.
+  </footer>
+</div>
+
+<script>
+const Q = [
+
+/* ============ SQL ============ */
+{c:'SQL', q:'Какие бывают JOIN и чем они отличаются?',
+ en:'What types of JOIN are there and how do they differ?',
+ a:`<ul>
+ <li><code>INNER JOIN</code> — только строки, у которых нашлось совпадение в обеих таблицах.</li>
+ <li><code>LEFT JOIN</code> — все строки левой таблицы; там, где справа совпадения нет, будут <code>NULL</code>.</li>
+ <li><code>RIGHT JOIN</code> — зеркально. На практике почти не используют: читается хуже, всегда можно переписать через LEFT.</li>
+ <li><code>FULL OUTER JOIN</code> — все строки обеих таблиц, несовпавшие добиваются NULL.</li>
+ <li><code>CROSS JOIN</code> — декартово произведение, без условия.</li>
+ <li><code>SELF JOIN</code> — таблица соединяется сама с собой (иерархия сотрудник–руководитель).</li>
+ </ul>
+ <p class="key">Ключевое: LEFT JOIN отвечает на вопрос «кто есть слева, но чего нет справа» — через <code>WHERE b.id IS NULL</code>. Это самый частый практический кейс: клиенты без заказов, платежи без сверки.</p>
+ <p class="trap">Ловушка: условие на правую таблицу, поставленное в <code>WHERE</code> вместо <code>ON</code>, превращает LEFT JOIN в INNER — NULL-строки отфильтруются. Скажи это сам, интервьюер обычно ждёт именно этого.</p>`},
+
+{c:'SQL', q:'В чём разница между WHERE и HAVING?',
+ en:'What is the difference between WHERE and HAVING?',
+ a:`<p><code>WHERE</code> фильтрует строки <b>до</b> группировки, <code>HAVING</code> — группы <b>после</b> агрегации.</p>
+ <pre><code>SELECT client_id, SUM(amount) AS total
+FROM payments
+WHERE status = 'success'      -- отсеиваем строки
+GROUP BY client_id
+HAVING SUM(amount) &gt; 100000  -- отсеиваем группы</code></pre>
+ <p class="key">Ключевое: в <code>WHERE</code> нельзя использовать агрегатные функции, в <code>HAVING</code> — можно. Всё, что можно отфильтровать в WHERE, надо фильтровать в WHERE — это дешевле, строк до группировки меньше.</p>`},
+
+{c:'SQL', q:'В каком порядке логически выполняется SELECT-запрос?',
+ en:'What is the logical execution order of a SELECT query?',
+ a:`<p><code>FROM</code> → <code>JOIN</code> → <code>WHERE</code> → <code>GROUP BY</code> → <code>HAVING</code> → <code>SELECT</code> → <code>DISTINCT</code> → <code>ORDER BY</code> → <code>LIMIT/OFFSET</code></p>
+ <p class="key">Ключевое следствие: алиас, заданный в <code>SELECT</code>, нельзя использовать в <code>WHERE</code> — WHERE отрабатывает раньше. А в <code>ORDER BY</code> можно, он позже.</p>
+ <p>Второе следствие: оконные функции считаются после <code>HAVING</code>, поэтому по результату оконной функции нельзя фильтровать напрямую — нужен подзапрос или CTE.</p>
+ <p class="trap">Это вопрос-маркер: по ответу сразу видно, писал человек SQL или читал о нём.</p>`},
+
+{c:'SQL', q:'Чем отличаются COUNT(*), COUNT(column) и COUNT(DISTINCT column)?',
+ en:'What is the difference between COUNT(*), COUNT(column) and COUNT(DISTINCT column)?',
+ a:`<ul>
+ <li><code>COUNT(*)</code> — количество строк, включая строки с NULL.</li>
+ <li><code>COUNT(column)</code> — количество строк, где столбец <b>не NULL</b>.</li>
+ <li><code>COUNT(DISTINCT column)</code> — количество уникальных не-NULL значений.</li>
+ </ul>
+ <p class="key">Ключевое: агрегатные функции игнорируют NULL. Поэтому <code>AVG(col)</code> делит на число не-NULL значений, а не на общее число строк — классический источник расхождений в отчётности.</p>`},
+
+{c:'SQL', q:'Что такое оконные функции и чем они отличаются от GROUP BY?',
+ en:'What are window functions and how do they differ from GROUP BY?',
+ a:`<p><code>GROUP BY</code> схлопывает строки в группы — детализация теряется. Оконная функция считает агрегат <b>по окну строк, но возвращает значение для каждой строки</b> — детализация сохраняется.</p>
+ <pre><code>SELECT
+  client_id,
+  payment_id,
+  amount,
+  SUM(amount)  OVER (PARTITION BY client_id) AS client_total,
+  ROW_NUMBER() OVER (PARTITION BY client_id ORDER BY paid_at DESC) AS rn
+FROM payments;</code></pre>
+ <p>Ранжирование:</p>
+ <ul>
+ <li><code>ROW_NUMBER()</code> — 1,2,3,4 — всегда уникальный номер.</li>
+ <li><code>RANK()</code> — 1,2,2,4 — при равенстве одинаковый ранг, следующий с пропуском.</li>
+ <li><code>DENSE_RANK()</code> — 1,2,2,3 — без пропуска.</li>
+ </ul>
+ <p class="key">Ключевое: <code>ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)</code> с последующим <code>WHERE rn = 1</code> — стандартный способ взять «последнюю запись в каждой группе». Это самая частая практическая задача на собеседовании.</p>
+ <p>Ещё пригодятся <code>LAG()</code> / <code>LEAD()</code> — предыдущее и следующее значение, нужны для расчёта дельт и интервалов между событиями.</p>`},
+
+{c:'SQL', q:'Что такое CTE и когда он лучше подзапроса?',
+ en:'What is a CTE and when is it better than a subquery?',
+ a:`<p>CTE (Common Table Expression) — именованный временный результат внутри запроса, через <code>WITH</code>.</p>
+ <pre><code>WITH successful AS (
+  SELECT * FROM payments WHERE status = 'success'
+),
+totals AS (
+  SELECT client_id, SUM(amount) AS total FROM successful GROUP BY client_id
+)
+SELECT * FROM totals WHERE total &gt; 100000;</code></pre>
+ <p class="key">Ключевое: CTE выигрывает у подзапроса в двух случаях — когда один и тот же промежуточный результат нужен несколько раз, и когда логика многоступенчатая и читаемость важнее. Функционально почти всегда взаимозаменяемы.</p>
+ <p>Рекурсивный CTE (<code>WITH RECURSIVE</code>) — обход иерархий: дерево категорий, оргструктура, цепочка связанных транзакций.</p>`},
+
+{c:'SQL', q:'UNION или UNION ALL — что выбрать?',
+ en:'UNION or UNION ALL — which one to choose?',
+ a:`<p><code>UNION</code> объединяет и <b>убирает дубликаты</b> — для этого делает сортировку/хеширование, это дорого. <code>UNION ALL</code> просто склеивает.</p>
+ <p class="key">Ключевое: по умолчанию бери <code>UNION ALL</code>. Используй <code>UNION</code> только если дубликаты действительно возможны и их надо убрать. На больших таблицах разница в разы.</p>
+ <p>Требование к обоим: одинаковое число столбцов и совместимые типы.</p>`},
+
+{c:'SQL', q:'Что такое индекс и когда он не помогает?',
+ en:'What is an index and when does it not help?',
+ a:`<p>Индекс — структура данных (обычно B-tree), которая ускоряет поиск строк ценой замедления записи и дополнительного места на диске.</p>
+ <p><b>Не помогает или не используется, когда:</b></p>
+ <ul>
+ <li>на индексированный столбец навешена функция: <code>WHERE UPPER(email) = ...</code> — нужен функциональный индекс;</li>
+ <li>поиск по шаблону с ведущим <code>%</code>: <code>LIKE '%abc'</code>;</li>
+ <li>низкая селективность — например, индекс по полю <code>gender</code>: планировщику дешевле прочитать всю таблицу;</li>
+ <li>запрос всё равно возвращает большую долю таблицы;</li>
+ <li>в составном индексе <code>(a, b)</code> фильтр идёт только по <code>b</code> — левый префикс не задействован.</li>
+ </ul>
+ <p class="key">Ключевое: индексы ускоряют <code>SELECT</code> и замедляют <code>INSERT/UPDATE/DELETE</code>. В системе с интенсивной записью — платёжный шлюз, лог транзакций — лишние индексы это реальная проблема, а не мелочь.</p>`},
+
+{c:'SQL', q:'Что такое EXPLAIN и на что вы в нём смотрите?',
+ en:'What is EXPLAIN and what do you look at in it?',
+ a:`<p><code>EXPLAIN</code> показывает план выполнения запроса, <code>EXPLAIN ANALYZE</code> — ещё и фактическое время (запрос при этом реально выполняется).</p>
+ <p><b>На что смотреть:</b></p>
+ <ul>
+ <li><code>Seq Scan</code> (полный проход) на большой таблице там, где ожидался <code>Index Scan</code>;</li>
+ <li>расхождение оценки строк и факта — устаревшая статистика, нужен <code>ANALYZE</code>;</li>
+ <li>тип соединения: <code>Nested Loop</code> на больших объёмах вместо <code>Hash Join</code>;</li>
+ <li>самый дорогой узел по <code>cost</code> / фактическому времени.</li>
+ </ul>
+ <p class="key">Для СА достаточно уровня: «умею прочитать план, увидеть Seq Scan там, где нужен индекс, и прийти с этим к разработчику или DBA». Никто не ждёт, что аналитик будет тюнить планировщик.</p>`},
+
+{c:'SQL', q:'Что такое ACID?',
+ en:'What is ACID?',
+ a:`<ul>
+ <li><b>Atomicity</b> — атомарность: транзакция выполняется целиком или не выполняется вовсе. Списали с одного счёта и упали — откат обоих действий.</li>
+ <li><b>Consistency</b> — согласованность: БД переходит из одного корректного состояния в другое, все ограничения соблюдены.</li>
+ <li><b>Isolation</b> — изолированность: параллельные транзакции не видят промежуточных состояний друг друга.</li>
+ <li><b>Durability</b> — долговечность: после коммита данные переживут отказ, они на диске.</li>
+ </ul>
+ <p class="key">Ключевое для финтеха: перевод между счетами — канонический пример атомарности. Всегда приводи именно его, это ровно то, что от тебя ждут.</p>`},
+
+{c:'SQL', q:'Какие есть уровни изоляции транзакций и какие аномалии они решают?',
+ en:'What transaction isolation levels exist and which anomalies do they prevent?',
+ a:`<p><b>Аномалии:</b></p>
+ <ul>
+ <li><b>Dirty read</b> — прочитали незакоммиченные чужие изменения.</li>
+ <li><b>Non-repeatable read</b> — прочитали строку дважды, между чтениями её изменили.</li>
+ <li><b>Phantom read</b> — повторили тот же запрос, появились новые строки, попадающие под условие.</li>
+ </ul>
+ <p><b>Уровни (от слабого к сильному):</b></p>
+ <ul>
+ <li><code>READ UNCOMMITTED</code> — возможно всё, включая грязное чтение.</li>
+ <li><code>READ COMMITTED</code> — нет грязного чтения. Дефолт в PostgreSQL и Oracle.</li>
+ <li><code>REPEATABLE READ</code> — нет и неповторяющегося чтения. Дефолт в MySQL/InnoDB.</li>
+ <li><code>SERIALIZABLE</code> — нет ни одной аномалии, транзакции как будто выполняются последовательно.</li>
+ </ul>
+ <p class="key">Ключевое: чем выше уровень, тем выше корректность и ниже параллелизм. В финтехе критичные операции — списание, изменение баланса — идут на повышенном уровне, отчётные выборки на пониженном.</p>`},
+
+{c:'SQL', q:'Найдите вторую по величине зарплату / последний платёж каждого клиента.',
+ en:'Find the second highest salary / the latest payment per client.',
+ a:`<p>Вторая по величине зарплата — через <code>DENSE_RANK</code> (устойчиво к дубликатам):</p>
+ <pre><code>WITH r AS (
+  SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+  FROM employees
+)
+SELECT DISTINCT salary FROM r WHERE rnk = 2;</code></pre>
+ <p>Последний платёж каждого клиента:</p>
+ <pre><code>WITH r AS (
+  SELECT p.*, ROW_NUMBER() OVER (PARTITION BY client_id ORDER BY paid_at DESC) AS rn
+  FROM payments p
+)
+SELECT * FROM r WHERE rn = 1;</code></pre>
+ <p class="key">Проговаривай вслух, почему <code>DENSE_RANK</code>, а не <code>ROW_NUMBER</code>: если двое получают одинаково много, «вторая зарплата» — это следующее по величине значение, а не вторая строка. Такое уточнение ценится выше самого запроса.</p>`},
+
+{c:'SQL', q:'Как найти дубликаты в таблице?',
+ en:'How do you find duplicate rows in a table?',
+ a:`<pre><code>SELECT email, COUNT(*)
+FROM users
+GROUP BY email
+HAVING COUNT(*) &gt; 1;</code></pre>
+ <p>Показать сами дублирующиеся строки и оставить по одной:</p>
+ <pre><code>WITH d AS (
+  SELECT id, email,
+         ROW_NUMBER() OVER (PARTITION BY email ORDER BY created_at) AS rn
+  FROM users
+)
+SELECT * FROM d WHERE rn &gt; 1;   -- это кандидаты на удаление</code></pre>
+ <p class="key">Правильный первый ход аналитика — уточнить, что считается дубликатом: полное совпадение строки или совпадение по бизнес-ключу. Это разные запросы и разные бизнес-решения.</p>`},
+
+{c:'SQL', q:'Как ведёт себя NULL в сравнениях?',
+ en:'How does NULL behave in comparisons?',
+ a:`<p>NULL — это «значение неизвестно», а не ноль и не пустая строка. Любое сравнение с ним даёт <code>UNKNOWN</code>, а не TRUE/FALSE.</p>
+ <ul>
+ <li><code>NULL = NULL</code> → UNKNOWN. Проверять только через <code>IS NULL</code> / <code>IS NOT NULL</code>.</li>
+ <li><code>NOT IN (подзапрос с NULL)</code> не вернёт ничего — классическая ошибка.</li>
+ <li>Агрегатные функции NULL игнорируют, кроме <code>COUNT(*)</code>.</li>
+ <li>Замена: <code>COALESCE(col, 0)</code>.</li>
+ </ul>
+ <p class="key">Ключевое: трёхзначная логика — TRUE, FALSE, UNKNOWN. Назови этот термин, он показывает, что ты понимаешь механику, а не заучил правило.</p>`},
+
+{c:'SQL', q:'DELETE, TRUNCATE и DROP — в чём разница?',
+ en:'What is the difference between DELETE, TRUNCATE and DROP?',
+ a:`<ul>
+ <li><code>DELETE</code> — DML, удаляет строки, можно с <code>WHERE</code>, пишется в лог транзакций, откатывается, триггеры срабатывают. Медленно на больших объёмах.</li>
+ <li><code>TRUNCATE</code> — DDL, удаляет все строки разом, <code>WHERE</code> нет, быстро, сбрасывает счётчики автоинкремента, триггеры на строки не срабатывают.</li>
+ <li><code>DROP</code> — DDL, удаляет саму таблицу вместе со структурой, индексами и правами.</li>
+ </ul>
+ <p class="key">Для финтеха важная оговорка: в системах с требованиями к аудиту записи обычно вообще не удаляют, а помечают — soft delete через <code>deleted_at</code>. Скажи это, если речь про платёжные данные.</p>`},
+
+/* ============ Базы данных и моделирование ============ */
+{c:'Данные', q:'Что такое ER-модель? Из чего она состоит?',
+ en:'What is an ER model and what does it consist of?',
+ a:`<p>ER-модель (Entity–Relationship) — концептуальное описание предметной области через сущности, их атрибуты и связи между ними.</p>
+ <ul>
+ <li><b>Сущность</b> — объект предметной области: Клиент, Счёт, Платёж.</li>
+ <li><b>Атрибут</b> — свойство сущности; бывает ключевой, обязательный, необязательный, составной, вычисляемый.</li>
+ <li><b>Связь</b> — отношение между сущностями, характеризуется <b>кардинальностью</b> (1:1, 1:N, M:N) и <b>обязательностью</b> участия с каждой стороны.</li>
+ </ul>
+ <p class="key">Ключевое: обязательность и кардинальность — две независимые характеристики. «У клиента может не быть ни одного счёта, но у счёта обязательно есть ровно один владелец» — это 1:N с необязательной стороной N и обязательной стороной 1.</p>
+ <p>Нотации: Crow's Foot («вороньи лапки») — самая распространённая, Чена — академическая, IDEF1X — в госсекторе.</p>`},
+
+{c:'Данные', q:'Какие бывают ключи?',
+ en:'What types of keys are there?',
+ a:`<ul>
+ <li><b>Первичный (PK)</b> — уникально идентифицирует строку, не NULL, один на таблицу.</li>
+ <li><b>Внешний (FK)</b> — ссылка на PK другой таблицы, обеспечивает ссылочную целостность.</li>
+ <li><b>Составной</b> — PK из нескольких столбцов; типичен для таблиц-связок M:N.</li>
+ <li><b>Естественный</b> — уже существующий в предметной области: ИНН, номер счёта.</li>
+ <li><b>Суррогатный</b> — искусственный: автоинкремент или UUID.</li>
+ <li><b>Потенциальный (candidate)</b> — любой столбец/набор, который мог бы быть PK.</li>
+ </ul>
+ <p class="key">Почему в проде почти всегда суррогатный: естественный ключ может измениться (человек сменил паспорт), а PK менять нельзя — на него ссылаются FK. Плюс суррогатный компактнее в индексе.</p>
+ <p>UUID против автоинкремента: UUID можно генерировать на клиенте и в распределённой системе без коллизий, но он больше по размеру и хуже ложится в B-tree.</p>`},
+
+{c:'Данные', q:'Что такое нормализация? Расскажите про 1НФ, 2НФ, 3НФ.',
+ en:'What is normalization? Explain 1NF, 2NF, 3NF.',
+ a:`<p>Нормализация — приведение схемы к виду, где данные не дублируются и нет аномалий вставки, обновления и удаления.</p>
+ <ul>
+ <li><b>1НФ</b> — все атрибуты атомарны, нет повторяющихся групп и списков в одной ячейке. Три телефона клиента — отдельная таблица, а не поле «телефоны» через запятую.</li>
+ <li><b>2НФ</b> — 1НФ + каждый неключевой атрибут зависит от <b>всего</b> составного ключа, а не от его части.</li>
+ <li><b>3НФ</b> — 2НФ + нет транзитивных зависимостей: неключевой атрибут не зависит от другого неключевого. Классика: в таблице заказов хранится <code>client_id</code> и заодно <code>client_city</code> — город зависит от клиента, а не от заказа.</li>
+ </ul>
+ <p class="key">Практический ориентир: 3НФ — рабочий стандарт для OLTP. Дальше (БКНФ, 4НФ) на собеседовании junior/middle почти не спрашивают, достаточно знать, что они существуют.</p>`},
+
+{c:'Данные', q:'Что такое денормализация и зачем она нужна?',
+ en:'What is denormalization and why is it used?',
+ a:`<p>Осознанное внесение избыточности ради скорости чтения: продублировать поле, хранить предпосчитанный агрегат, схлопнуть две таблицы в одну.</p>
+ <p><b>Зачем:</b> убрать дорогие JOIN на горячих запросах, ускорить отчётность и витрины.</p>
+ <p><b>Цена:</b> данные надо синхронизировать; риск рассогласования; растёт объём хранения.</p>
+ <p class="key">Ключевая формулировка: денормализация — это осознанный размен целостности на производительность, и он допустим только тогда, когда узкое место измерено. Денормализация «на всякий случай» — антипаттерн.</p>
+ <p>Типичный пример в финтехе: текущий баланс счёта хранится отдельным полем, хотя формально он выводим суммированием всех проводок. Считать его на лету на миллионах операций слишком дорого.</p>`},
+
+{c:'Данные', q:'Как реализовать связь многие-ко-многим?',
+ en:'How do you implement a many-to-many relationship?',
+ a:`<p>Через промежуточную таблицу-связку (junction / associative table), которая содержит два внешних ключа.</p>
+ <pre><code>students(id, name)
+courses(id, title)
+student_courses(student_id, course_id, enrolled_at)
+  PRIMARY KEY (student_id, course_id)</code></pre>
+ <p class="key">Ключевое: таблица-связка — естественное место для атрибутов самой связи. Дата зачисления относится не к студенту и не к курсу, а к факту их соединения. Умение это заметить отличает аналитика от человека, заучившего схему.</p>`},
+
+{c:'Данные', q:'Чем OLTP отличается от OLAP?',
+ en:'What is the difference between OLTP and OLAP?',
+ a:`<table style="width:100%;border-collapse:collapse;font-size:14px">
+ <tr><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>OLTP</b></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>OLAP</b></td></tr>
+ <tr><td style="padding:4px 8px">Задача</td><td style="padding:4px 8px">обработка операций</td><td style="padding:4px 8px">аналитика, отчётность</td></tr>
+ <tr><td style="padding:4px 8px">Операции</td><td style="padding:4px 8px">много коротких INSERT/UPDATE</td><td style="padding:4px 8px">тяжёлые SELECT по большим объёмам</td></tr>
+ <tr><td style="padding:4px 8px">Схема</td><td style="padding:4px 8px">нормализованная (3НФ)</td><td style="padding:4px 8px">денормализованная — звезда, снежинка</td></tr>
+ <tr><td style="padding:4px 8px">Данные</td><td style="padding:4px 8px">актуальные</td><td style="padding:4px 8px">исторические, срезами</td></tr>
+ <tr><td style="padding:4px 8px">Пример</td><td style="padding:4px 8px">процессинг платежей</td><td style="padding:4px 8px">витрина по выручке за 3 года</td></tr>
+ </table>
+ <p class="key">Ключевое: их разделяют физически, чтобы аналитические запросы не мешали боевой обработке. Данные переливаются ETL/ELT-процессом в хранилище (DWH).</p>`},
+
+{c:'Данные', q:'Когда выбрать NoSQL вместо реляционной БД?',
+ en:'When would you choose NoSQL over a relational database?',
+ a:`<p><b>Реляционная</b> — когда важны транзакции, сложные связи и целостность. Финансовые операции — почти всегда сюда.</p>
+ <p><b>NoSQL</b> — по типам:</p>
+ <ul>
+ <li><b>Документные</b> (MongoDB) — схема гибкая и меняется, данные читаются целым документом: каталоги, профили, конфигурации.</li>
+ <li><b>Key-value</b> (Redis) — кэш, сессии, счётчики, rate limiting.</li>
+ <li><b>Колоночные</b> (ClickHouse, Cassandra) — аналитика на больших объёмах, логи, события.</li>
+ <li><b>Графовые</b> (Neo4j) — связи важнее самих объектов: антифрод, соцграф, схемы владения.</li>
+ </ul>
+ <p class="key">Правильный ответ на собеседовании в банке: NoSQL используется <b>рядом</b> с реляционной, а не вместо неё. Балансы и проводки в PostgreSQL, кэш в Redis, аналитика событий в ClickHouse, антифрод-граф в графовой БД.</p>`},
+
+/* ============ API и интеграции ============ */
+{c:'API', q:'Что такое REST? Назовите его ограничения.',
+ en:'What is REST? Name its constraints.',
+ a:`<p>REST (Representational State Transfer) — архитектурный стиль взаимодействия по HTTP, а не протокол и не стандарт.</p>
+ <p><b>Шесть ограничений:</b></p>
+ <ul>
+ <li><b>Клиент-серверная архитектура</b> — разделение ответственности.</li>
+ <li><b>Stateless</b> — сервер не хранит состояние сессии, каждый запрос самодостаточен.</li>
+ <li><b>Кэшируемость</b> — ответ помечен как кэшируемый или нет.</li>
+ <li><b>Единообразие интерфейса</b> — ресурсы, единая схема именования, стандартные методы.</li>
+ <li><b>Многоуровневость</b> — между клиентом и сервером могут стоять прокси, гейтвеи, балансировщики.</li>
+ <li><b>Code on demand</b> — необязательное, сервер может отдать исполняемый код.</li>
+ </ul>
+ <p class="key">Ключевое: <b>stateless</b> — самое важное для собеседования. Из него следует горизонтальное масштабирование (любой инстанс обработает любой запрос) и то, что токен передаётся в каждом запросе, а не хранится в серверной сессии.</p>
+ <p class="trap">Ловушка: строго говоря, REST требует ещё и HATEOAS. В реальности почти никто его не реализует, и большинство «REST API» — это RESTful-like. Упомянуть это — большой плюс.</p>`},
+
+{c:'API', q:'Какие HTTP-методы вы знаете? Какие из них идемпотентны и безопасны?',
+ en:'Which HTTP methods do you know? Which are idempotent and which are safe?',
+ a:`<table style="width:100%;border-collapse:collapse;font-size:14px">
+ <tr><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>Метод</b></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>Безопасный</b></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>Идемпотентный</b></td></tr>
+ <tr><td style="padding:4px 8px">GET</td><td style="padding:4px 8px">да</td><td style="padding:4px 8px">да</td></tr>
+ <tr><td style="padding:4px 8px">HEAD / OPTIONS</td><td style="padding:4px 8px">да</td><td style="padding:4px 8px">да</td></tr>
+ <tr><td style="padding:4px 8px">PUT</td><td style="padding:4px 8px">нет</td><td style="padding:4px 8px">да</td></tr>
+ <tr><td style="padding:4px 8px">DELETE</td><td style="padding:4px 8px">нет</td><td style="padding:4px 8px">да</td></tr>
+ <tr><td style="padding:4px 8px">POST</td><td style="padding:4px 8px">нет</td><td style="padding:4px 8px"><b>нет</b></td></tr>
+ <tr><td style="padding:4px 8px">PATCH</td><td style="padding:4px 8px">нет</td><td style="padding:4px 8px">нет (обычно)</td></tr>
+ </table>
+ <p><b>Безопасный</b> — не изменяет состояние на сервере. <b>Идемпотентный</b> — повторный вызов с теми же параметрами даёт тот же результат.</p>
+ <p class="key">Ключевое: DELETE идемпотентен, хотя первый вызов вернёт 204, а второй 404. Идемпотентность про <b>состояние системы</b>, а не про одинаковый код ответа. Это любимое уточнение интервьюеров.</p>`},
+
+{c:'API', q:'Что такое идемпотентность и как её обеспечить для платежа?',
+ en:'What is idempotency and how do you implement it for a payment?',
+ a:`<p>Идемпотентность — свойство операции, при котором её повторное выполнение не меняет результат по сравнению с однократным.</p>
+ <p><b>Зачем в финтехе:</b> сеть ненадёжна. Клиент отправил «списать 1000 ₽», ответ не дошёл, клиент повторил запрос. Без защиты деньги спишутся дважды.</p>
+ <p><b>Как реализуется — ключ идемпотентности:</b></p>
+ <ul>
+ <li>клиент генерирует уникальный <code>Idempotency-Key</code> (UUID) и шлёт его в заголовке;</li>
+ <li>сервер сохраняет ключ вместе с результатом операции;</li>
+ <li>при повторе с тем же ключом операция не выполняется заново — возвращается <b>сохранённый результат первого вызова</b>;</li>
+ <li>ключ живёт ограниченное время (обычно сутки).</li>
+ </ul>
+ <p class="key">Обязательно уточни: ключ генерирует <b>клиент</b>, а не сервер — иначе при потере ответа клиенту нечего повторять. И проверка ключа должна быть атомарной, иначе два параллельных запроса проскочат оба.</p>
+ <p class="trap">Это вопрос номер один на СА в платёжных командах. Если знаешь только его — уже сильно лучше среднего кандидата.</p>`},
+
+{c:'API', q:'Какие коды ответов HTTP вы знаете?',
+ en:'Which HTTP status codes do you know?',
+ a:`<p><b>2xx — успех:</b> <code>200 OK</code> · <code>201 Created</code> (создан ресурс, в <code>Location</code> ссылка) · <code>202 Accepted</code> (принято в асинхронную обработку) · <code>204 No Content</code></p>
+ <p><b>3xx:</b> <code>301</code> постоянный редирект · <code>304 Not Modified</code> (кэш)</p>
+ <p><b>4xx — ошибка клиента:</b> <code>400</code> некорректный запрос · <code>401</code> не аутентифицирован · <code>403</code> аутентифицирован, но нет прав · <code>404</code> не найден · <code>409 Conflict</code> конфликт состояния · <code>422</code> синтаксис верен, бизнес-валидация не прошла · <code>429 Too Many Requests</code></p>
+ <p><b>5xx — ошибка сервера:</b> <code>500</code> внутренняя · <code>502</code> плохой ответ от вышестоящего · <code>503</code> сервис недоступен · <code>504</code> таймаут вышестоящего</p>
+ <p class="key">Разница 401 и 403 — спрашивают почти всегда: 401 «я не знаю, кто ты», 403 «я знаю, кто ты, но тебе нельзя».</p>
+ <p class="key">Разница 4xx и 5xx важна практически: на 4xx повторять запрос бессмысленно, на 5xx и таймаут — нужен retry с экспоненциальной задержкой, и вот тут обязательна идемпотентность.</p>`},
+
+{c:'API', q:'PUT, PATCH или POST — когда что использовать?',
+ en:'PUT, PATCH or POST — when to use which?',
+ a:`<ul>
+ <li><code>POST /accounts</code> — создать новый ресурс, идентификатор назначает сервер. Не идемпотентен.</li>
+ <li><code>PUT /accounts/42</code> — полная замена ресурса целиком. Идемпотентен: отправил то же тело — состояние то же. Может создать ресурс, если клиент сам задаёт id.</li>
+ <li><code>PATCH /accounts/42</code> — частичное изменение, передаются только меняемые поля.</li>
+ </ul>
+ <p class="key">Ключевое: PUT требует передать <b>весь</b> объект — незаданные поля затрутся. Это частая причина боевых инцидентов, когда фронтенд шлёт PUT с неполным телом.</p>
+ <p>PATCH обычно не идемпотентен: операция вида «увеличить баланс на 100» при повторе даст другой результат. А PATCH с явным присвоением значения — идемпотентен.</p>`},
+
+{c:'API', q:'Чем REST отличается от SOAP?',
+ en:'How does REST differ from SOAP?',
+ a:`<table style="width:100%;border-collapse:collapse;font-size:14px">
+ <tr><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>REST</b></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>SOAP</b></td></tr>
+ <tr><td style="padding:4px 8px">Природа</td><td style="padding:4px 8px">архитектурный стиль</td><td style="padding:4px 8px">протокол со строгой спецификацией</td></tr>
+ <tr><td style="padding:4px 8px">Формат</td><td style="padding:4px 8px">чаще JSON</td><td style="padding:4px 8px">только XML (конверт Envelope)</td></tr>
+ <tr><td style="padding:4px 8px">Контракт</td><td style="padding:4px 8px">OpenAPI, необязателен</td><td style="padding:4px 8px">WSDL, обязателен</td></tr>
+ <tr><td style="padding:4px 8px">Транспорт</td><td style="padding:4px 8px">HTTP</td><td style="padding:4px 8px">HTTP, SMTP, JMS</td></tr>
+ <tr><td style="padding:4px 8px">Безопасность</td><td style="padding:4px 8px">HTTPS, OAuth</td><td style="padding:4px 8px">WS-Security, подпись на уровне сообщения</td></tr>
+ <tr><td style="padding:4px 8px">Транзакции</td><td style="padding:4px 8px">нет из коробки</td><td style="padding:4px 8px">WS-AtomicTransaction</td></tr>
+ </table>
+ <p class="key">Почему это спрашивают в банках: во внутреннем ландшафте крупного банка полно легаси на SOAP — АБС, процессинг, интеграции с госсистемами. Кандидат, который умеет читать WSDL, ценнее того, кто знает только REST.</p>`},
+
+{c:'API', q:'Чем gRPC и GraphQL отличаются от REST?',
+ en:'How do gRPC and GraphQL differ from REST?',
+ a:`<p><b>gRPC</b> — вызов удалённых процедур поверх HTTP/2, контракт в <code>.proto</code>, бинарный формат Protobuf.</p>
+ <ul>
+ <li>Плюсы: быстрее и компактнее JSON, строгая типизация, кодогенерация клиента, стриминг в обе стороны.</li>
+ <li>Минусы: нечитаемо без инструментов, плохо работает напрямую из браузера.</li>
+ <li>Где применяют: <b>внутреннее</b> взаимодействие микросервисов.</li>
+ </ul>
+ <p><b>GraphQL</b> — один эндпоинт, клиент сам описывает, какие поля ему нужны.</p>
+ <ul>
+ <li>Плюсы: решает over-fetching и under-fetching, один запрос вместо пяти — удобно мобильным клиентам.</li>
+ <li>Минусы: сложнее кэшировать, легко словить тяжёлый вложенный запрос, сложнее ограничивать нагрузку.</li>
+ </ul>
+ <p class="key">Формулировка на собеседовании: REST — наружу для партнёров, gRPC — между своими сервисами, GraphQL — для фронтенда с разнородными потребностями в данных. Это не конкуренты, а разные слои.</p>`},
+
+{c:'API', q:'Что такое OpenAPI/Swagger и что должно быть в спецификации API?',
+ en:'What is OpenAPI/Swagger and what should an API specification contain?',
+ a:`<p>OpenAPI — стандарт описания REST API в YAML/JSON. Swagger — набор инструментов вокруг него (UI, редактор, кодогенерация).</p>
+ <p><b>Что описывает спецификация:</b></p>
+ <ul>
+ <li>эндпоинты и методы, версия API;</li>
+ <li>параметры: path, query, header, тело запроса;</li>
+ <li>схемы данных, типы, обязательность, форматы, ограничения;</li>
+ <li>все коды ответов, включая ошибки, и структуру тела ошибки;</li>
+ <li>схему аутентификации;</li>
+ <li>примеры запросов и ответов.</li>
+ </ul>
+ <p class="key">Ключевое для СА: спецификация — это контракт. Она пишется <b>до</b> разработки, и по ней фронтенд и бэкенд могут работать параллельно, а тестировщик — готовить кейсы. Подход называется <b>contract-first</b> или <b>design-first</b>. Назови этот термин — это ровно то, чем занимается системный аналитик.</p>`},
+
+{c:'API', q:'Как реализовать пагинацию в API?',
+ en:'How do you implement pagination in an API?',
+ a:`<ul>
+ <li><b>Offset-based</b>: <code>?limit=50&offset=100</code> или <code>?page=3&size=50</code>. Просто, можно прыгнуть на любую страницу. Минусы: на больших смещениях запрос замедляется, а при вставке новых записей строки «съезжают» и попадают на две страницы сразу или пропадают.</li>
+ <li><b>Cursor-based (keyset)</b>: <code>?limit=50&after=eyJpZCI6MTAwfQ</code> — курсор указывает на последнюю отданную запись. Стабильно при вставках, быстро на любой глубине. Минус: нельзя прыгнуть на произвольную страницу.</li>
+ </ul>
+ <p class="key">Правильный ответ: для ленты событий, истории транзакций и любых часто пополняемых данных — курсорная. Для админки с номерами страниц — offset. В финтехе история операций почти всегда курсорная.</p>`},
+
+{c:'API', q:'Как версионировать API?',
+ en:'How do you version an API?',
+ a:`<ul>
+ <li><b>В URL</b>: <code>/api/v1/accounts</code> — самый распространённый, очевиден, легко роутить.</li>
+ <li><b>В заголовке</b>: <code>Accept: application/vnd.company.v2+json</code> — чище семантически, но менее удобен в отладке.</li>
+ <li><b>В query</b>: <code>?version=2</code> — редко, считается плохой практикой.</li>
+ </ul>
+ <p><b>Обратно совместимые изменения</b> (новая версия не нужна): добавление нового необязательного поля в ответ, нового эндпоинта, нового необязательного параметра.</p>
+ <p><b>Ломающие</b> (breaking changes, нужна новая версия): удаление или переименование поля, смена типа, ужесточение валидации, изменение семантики поля.</p>
+ <p class="key">Ключевое: версионирование — это в первую очередь про <b>договорённость с потребителями</b>: сколько версий поддерживаем одновременно и как долго, как уведомляем о выводе старой. Это зона ответственности аналитика, а не разработчика.</p>`},
+
+{c:'API', q:'Чем аутентификация отличается от авторизации? Какие механизмы знаете?',
+ en:'What is the difference between authentication and authorization?',
+ a:`<p><b>Аутентификация</b> — «кто ты» (проверка личности). <b>Авторизация</b> — «что тебе можно» (проверка прав).</p>
+ <p><b>Механизмы:</b></p>
+ <ul>
+ <li><b>Basic Auth</b> — логин:пароль в base64 в каждом запросе. Только поверх HTTPS, для прода не годится.</li>
+ <li><b>API key</b> — статический ключ в заголовке. Для server-to-server и партнёрских интеграций.</li>
+ <li><b>OAuth 2.0</b> — делегирование доступа: приложение получает доступ к ресурсам пользователя без его пароля. Основные grant type: <code>authorization_code</code> (веб и мобильные, с PKCE), <code>client_credentials</code> (сервис-сервису).</li>
+ <li><b>OpenID Connect</b> — надстройка над OAuth 2.0, которая добавляет именно <b>аутентификацию</b> через <code>id_token</code>.</li>
+ <li><b>mTLS</b> — взаимная проверка сертификатов. В межбанковских интеграциях норма.</li>
+ </ul>
+ <p class="key">Частая ошибка кандидатов: «OAuth — это про вход по кнопке Google». На самом деле OAuth 2.0 — это протокол <b>авторизации</b>, а вход даёт OpenID Connect поверх него. Сказать это — сильный ход.</p>`},
+
+{c:'API', q:'Что такое JWT? Из чего он состоит и в чём его минусы?',
+ en:'What is a JWT? What are its parts and drawbacks?',
+ a:`<p>JSON Web Token — самодостаточный подписанный токен из трёх частей через точку: <code>header.payload.signature</code>, каждая в base64url.</p>
+ <ul>
+ <li><b>Header</b> — алгоритм подписи (<code>HS256</code>, <code>RS256</code>).</li>
+ <li><b>Payload</b> — claims: <code>sub</code> (кто), <code>exp</code> (когда истекает), <code>iat</code>, <code>iss</code>, роли.</li>
+ <li><b>Signature</b> — подпись, подтверждает, что содержимое не подменили.</li>
+ </ul>
+ <p class="key">Главное: payload <b>не зашифрован</b>, а только закодирован — его прочитает кто угодно. Персональные данные и секреты в JWT класть нельзя. Это проверочный вопрос, на нём сыплются очень многие.</p>
+ <p><b>Минусы:</b> токен нельзя отозвать до истечения срока — сервер не хранит состояние. Отсюда схема «короткий access-токен на 5–15 минут плюс долгоживущий refresh-токен, который хранится на сервере и может быть отозван».</p>`},
+
+{c:'API', q:'Что такое вебхук и чем он лучше поллинга?',
+ en:'What is a webhook and how is it better than polling?',
+ a:`<p><b>Поллинг</b> — клиент периодически спрашивает «есть ли новое». <b>Вебхук</b> — сервер сам вызывает заранее указанный URL клиента, когда событие произошло.</p>
+ <p><b>Плюсы вебхука:</b> нет лишних запросов, событие приходит сразу.</p>
+ <p><b>Что обязательно продумать в постановке задачи</b> — здесь и проверяют аналитика:</p>
+ <ul>
+ <li><b>Ретраи</b>: получатель недоступен — сколько раз и с какой задержкой повторяем;</li>
+ <li><b>Идемпотентность</b>: из-за ретраев вебхук придёт дважды, получатель обязан это выдержать;</li>
+ <li><b>Подпись</b>: HMAC-подпись тела, чтобы получатель убедился в подлинности отправителя;</li>
+ <li><b>Порядок</b>: вебхуки могут прийти не в том порядке — нужен <code>event_id</code> и timestamp;</li>
+ <li><b>DLQ</b>: куда девать события, которые так и не доставились.</li>
+ </ul>
+ <p class="key">Типичный кейс в финтехе: платёжный шлюз уведомляет магазин об успешной оплате. Вебхук — «уведомление», источником истины он быть не должен: получив его, система обязана сходить в API и подтвердить статус.</p>`},
+
+{c:'API', q:'Что такое rate limiting и как он устроен?',
+ en:'What is rate limiting and how does it work?',
+ a:`<p>Ограничение частоты запросов от одного клиента — защита от перегрузки и злоупотреблений.</p>
+ <ul>
+ <li>Алгоритмы: fixed window, sliding window, token bucket, leaky bucket.</li>
+ <li>Ответ при превышении: <code>429 Too Many Requests</code> с заголовком <code>Retry-After</code>.</li>
+ <li>Информационные заголовки: <code>X-RateLimit-Limit</code>, <code>X-RateLimit-Remaining</code>, <code>X-RateLimit-Reset</code>.</li>
+ </ul>
+ <p class="key">Что от аналитика: зафиксировать лимиты в спецификации как <b>нефункциональное требование</b> — сколько запросов в секунду на клиента, что происходит при превышении, есть ли разные лимиты для разных тарифов. Без этого разработчик придумает лимит сам, и это всплывёт на проде.</p>`},
+
+{c:'API', q:'Что вы напишете в постановке задачи на интеграцию по API?',
+ en:'What would you include in a specification for an API integration?',
+ a:`<p>Это ключевой практический вопрос — по нему видно, делал ли человек постановки. Структура:</p>
+ <ol>
+ <li><b>Цель и бизнес-контекст</b> — какую задачу решаем, кто потребитель.</li>
+ <li><b>Схема взаимодействия</b> — sequence diagram: кто, кого, в каком порядке вызывает.</li>
+ <li><b>Контракт метода</b>: URL, метод, заголовки, тело запроса и ответа с типами, обязательностью, форматами и ограничениями.</li>
+ <li><b>Маппинг полей</b> — таблица «поле источника → поле приёмника → правило преобразования». Самая полезная часть документа.</li>
+ <li><b>Все коды ответов</b> и реакция системы на каждый.</li>
+ <li><b>Обработка ошибок</b>: таймауты, ретраи, идемпотентность, что показываем пользователю.</li>
+ <li><b>Аутентификация</b> и получение токена.</li>
+ <li><b>Нефункциональные</b>: тайм-аут, RPS, SLA, объём данных.</li>
+ <li><b>Логирование и аудит</b> — что пишем, что маскируем (номера карт, ПДн).</li>
+ <li><b>Тестовые сценарии</b> и данные стенда.</li>
+ </ol>
+ <p class="key">Пункты 4, 6 и 10 отличают опытного аналитика. Junior обычно описывает только happy path — назови обработку ошибок и маскирование данных сам, не дожидаясь вопроса.</p>`},
+
+/* ============ Асинхрон и брокеры ============ */
+{c:'Асинхрон', q:'Когда выбрать синхронное взаимодействие, а когда асинхронное?',
+ en:'When would you choose synchronous vs asynchronous communication?',
+ a:`<p><b>Синхронно</b> — когда ответ нужен немедленно и от него зависит следующий шаг пользователя: проверка баланса, авторизация платежа, валидация формы.</p>
+ <p><b>Асинхронно</b> — когда операция долгая, результат не нужен прямо сейчас или получателей много: рассылка уведомлений, формирование отчёта, публикация события «платёж прошёл» для десяти подписчиков.</p>
+ <p class="key">Ключевой аргумент: синхронный вызов создаёт <b>временную связанность</b> — если вызываемый сервис лежит, падает и вызывающий. Асинхронный обмен через брокер эту связанность разрывает: сообщение полежит в очереди, пока получатель не поднимется.</p>
+ <p>Гибрид, который любят в финтехе: клиент шлёт запрос, получает <code>202 Accepted</code> и идентификатор операции, дальше опрашивает статус или получает вебхук.</p>`},
+
+{c:'Асинхрон', q:'Чем Kafka отличается от RabbitMQ?',
+ en:'How does Kafka differ from RabbitMQ?',
+ a:`<table style="width:100%;border-collapse:collapse;font-size:14px">
+ <tr><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>Kafka</b></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>RabbitMQ</b></td></tr>
+ <tr><td style="padding:4px 8px">Модель</td><td style="padding:4px 8px">распределённый лог событий</td><td style="padding:4px 8px">классический брокер очередей</td></tr>
+ <tr><td style="padding:4px 8px">После чтения</td><td style="padding:4px 8px">сообщение остаётся, хранится по retention</td><td style="padding:4px 8px">удаляется после подтверждения</td></tr>
+ <tr><td style="padding:4px 8px">Позиция чтения</td><td style="padding:4px 8px">хранит консьюмер (offset), можно перечитать</td><td style="padding:4px 8px">брокер</td></tr>
+ <tr><td style="padding:4px 8px">Маршрутизация</td><td style="padding:4px 8px">простая, по топикам</td><td style="padding:4px 8px">гибкая: exchange, routing key</td></tr>
+ <tr><td style="padding:4px 8px">Пропускная способность</td><td style="padding:4px 8px">очень высокая</td><td style="padding:4px 8px">средняя</td></tr>
+ <tr><td style="padding:4px 8px">Типичное применение</td><td style="padding:4px 8px">поток событий, аналитика, event sourcing</td><td style="padding:4px 8px">задачи, команды, сложная маршрутизация</td></tr>
+ </table>
+ <p class="key">Одна фраза, по которой видно понимание: Kafka — это <b>лог</b>, а не очередь. Сообщение не «забирают», его читают по смещению, и несколько независимых потребителей читают один и тот же поток каждый в своём темпе.</p>`},
+
+{c:'Асинхрон', q:'Какие бывают гарантии доставки сообщений?',
+ en:'What message delivery guarantees exist?',
+ a:`<ul>
+ <li><b>At most once</b> — не более одного раза. Дублей нет, но сообщение можно потерять. Годится для метрик и телеметрии.</li>
+ <li><b>At least once</b> — не менее одного раза. Ничего не теряется, но возможны дубли. <b>Рабочий дефолт для бизнес-операций.</b></li>
+ <li><b>Exactly once</b> — ровно один раз. Дорого, требует поддержки транзакций на стороне брокера и потребителя, работает только внутри одной экосистемы.</li>
+ </ul>
+ <p class="key">Правильный ответ уровня middle: в проде почти всегда выбирают <b>at least once плюс идемпотентный потребитель</b>. Это дешевле и надёжнее, чем настоящий exactly once, и даёт тот же наблюдаемый эффект. Именно эту связку хотят услышать.</p>`},
+
+{c:'Асинхрон', q:'Как бороться с дублями сообщений?',
+ en:'How do you handle duplicate messages?',
+ a:`<ul>
+ <li><b>Идемпотентный потребитель</b>: у каждого сообщения есть <code>event_id</code>, потребитель хранит обработанные id и повтор игнорирует.</li>
+ <li><b>Ограничение в БД</b>: уникальный индекс на бизнес-ключе операции — вторая вставка просто упадёт.</li>
+ <li><b>Проверка состояния</b>: перед применением смотрим, не в целевом ли статусе уже объект.</li>
+ <li><b>Дедупликация по окну времени</b> в самом брокере, если он это умеет.</li>
+ </ul>
+ <p class="key">Формулировка: гарантировать отсутствие дублей на транспорте дорого и хрупко, поэтому ответственность переносят на потребителя. Проектировать надо так, чтобы повторная обработка была безопасна by design.</p>`},
+
+{c:'Асинхрон', q:'Что такое партиции в Kafka и как обеспечить порядок сообщений?',
+ en:'What are Kafka partitions and how do you guarantee message order?',
+ a:`<p>Топик делится на партиции — это единица параллелизма. Порядок гарантирован <b>только внутри одной партиции</b>, между партициями — нет.</p>
+ <p>Партиция выбирается по ключу сообщения: одинаковый ключ → всегда одна и та же партиция.</p>
+ <p class="key">Практический вывод: если нужен строгий порядок операций по счёту, ключом сообщения делают <code>account_id</code>. Тогда все события одного счёта лягут в одну партицию и будут обработаны по порядку, а разные счета обработаются параллельно.</p>
+ <p>Consumer group: каждую партицию в группе читает ровно один потребитель. Отсюда правило — потребителей в группе не больше, чем партиций, иначе лишние простаивают.</p>`},
+
+{c:'Асинхрон', q:'Что такое Dead Letter Queue?',
+ en:'What is a Dead Letter Queue?',
+ a:`<p>Отдельная очередь, куда складываются сообщения, которые не удалось обработать после исчерпания ретраев — битый формат, ссылка на несуществующий объект, неустранимая ошибка бизнес-логики.</p>
+ <p><b>Зачем:</b> «ядовитое» сообщение не должно блокировать очередь и уходить в бесконечный цикл ретраев, но и терять его нельзя.</p>
+ <p class="key">Что должен зафиксировать аналитик в постановке: сколько ретраев и с какой задержкой, при каких ошибках вообще нет смысла повторять, кто мониторит DLQ, каков процесс разбора и повторной отправки. Без этого DLQ превращается в свалку, которую никто не читает.</p>`},
+
+{c:'Асинхрон', q:'Что такое Outbox pattern?',
+ en:'What is the Outbox pattern?',
+ a:`<p>Решает проблему: надо атомарно и записать данные в свою БД, и отправить событие в брокер. Двух-фазный коммит между БД и Kafka невозможен — либо запись пройдёт без события, либо наоборот.</p>
+ <p><b>Как работает:</b></p>
+ <ol>
+ <li>В одной транзакции пишем и бизнес-данные, и запись о событии в таблицу <code>outbox</code>.</li>
+ <li>Отдельный процесс читает <code>outbox</code> и публикует события в брокер.</li>
+ <li>После подтверждения помечает запись отправленной.</li>
+ </ol>
+ <p class="key">Даёт at-least-once: событие может уйти дважды, но не потеряется. Потребитель обязан быть идемпотентным. Знание этого паттерна — уверенный сигнал уровня middle, junior его обычно не называют.</p>`},
+
+/* ============ Архитектура ============ */
+{c:'Архитектура', q:'Монолит или микросервисы — что выбрать и почему?',
+ en:'Monolith or microservices — which would you choose and why?',
+ a:`<p><b>Монолит:</b> одно приложение, одна кодовая база, один деплой.</p>
+ <ul><li>Плюсы: проще разрабатывать и отлаживать, транзакции в одной БД, нет сетевых задержек между модулями, дешевле в эксплуатации.</li>
+ <li>Минусы: любое изменение — полный релиз, масштабируется только целиком, с ростом команды растут конфликты, привязка к одному стеку.</li></ul>
+ <p><b>Микросервисы:</b> набор независимо развёртываемых сервисов вокруг бизнес-возможностей.</p>
+ <ul><li>Плюсы: независимый релиз и масштабирование, изоляция отказов, разные стеки, автономные команды.</li>
+ <li>Минусы: распределённые транзакции, сетевые отказы, сложность мониторинга и трассировки, дороже в эксплуатации, нужна зрелая инфраструктура.</li></ul>
+ <p class="key">Правильный ответ — не «микросервисы лучше». Правильный: начинать с хорошо структурированного монолита и выделять сервисы там, где для этого есть измеримая причина — разная нагрузка, разный темп релизов, разные команды. Формулировка «distributed monolith» как антипаттерн производит хорошее впечатление.</p>`},
+
+{c:'Архитектура', q:'Что такое Saga и зачем она нужна?',
+ en:'What is the Saga pattern and why is it needed?',
+ a:`<p>В микросервисах нет общей транзакции на несколько БД. Saga — последовательность локальных транзакций, каждая из которых при сбое откатывается <b>компенсирующей</b> транзакцией.</p>
+ <p>Пример перевода: списать со счёта А → зачислить на счёт Б → уведомить. Если зачисление не прошло, выполняется компенсация — возврат средств на счёт А. Это не откат в смысле БД, а <b>обратная бизнес-операция</b>.</p>
+ <p><b>Два способа координации:</b></p>
+ <ul>
+ <li><b>Хореография</b> — сервисы реагируют на события друг друга, центрального управляющего нет. Проще на старте, но общий сценарий нигде не описан целиком и его тяжело отследить.</li>
+ <li><b>Оркестрация</b> — отдельный оркестратор управляет шагами и знает весь сценарий. Логика видна в одном месте, легче мониторить; минус — оркестратор становится критической точкой.</li>
+ </ul>
+ <p class="key">Финтех-акцент: Saga даёт <b>eventual consistency</b>, а не строгую. Между шагами система в промежуточном состоянии, и это надо явно описать в требованиях — какой статус видит пользователь, пока перевод «в пути».</p>`},
+
+{c:'Архитектура', q:'Что такое двухфазный коммит и почему его избегают?',
+ en:'What is two-phase commit and why is it avoided?',
+ a:`<p>2PC — протокол распределённой транзакции: координатор сначала спрашивает всех участников «готовы?» (prepare), и только если все ответили да, рассылает commit.</p>
+ <p><b>Почему избегают:</b></p>
+ <ul>
+ <li>блокирующий: пока идёт голосование, ресурсы заблокированы;</li>
+ <li>отказ координатора между фазами оставляет участников в подвешенном состоянии;</li>
+ <li>плохо масштабируется, сильно бьёт по производительности;</li>
+ <li>многие современные хранилища и брокеры его просто не поддерживают.</li>
+ </ul>
+ <p class="key">Поэтому в микросервисной архитектуре вместо строгой согласованности выбирают Saga и eventual consistency. 2PC ещё встречается внутри одного контура — например, между БД и очередью в классическом Java-стеке через XA-транзакции.</p>`},
+
+{c:'Архитектура', q:'Что такое CAP-теорема?',
+ en:'What is the CAP theorem?',
+ a:`<p>В распределённой системе одновременно можно обеспечить только два свойства из трёх: <b>Consistency</b> (все узлы видят одни и те же данные), <b>Availability</b> (система отвечает на запросы), <b>Partition tolerance</b> (работает при разрыве связи между узлами).</p>
+ <p class="key">Уточнение, которое ценится: сетевые разрывы неизбежны, поэтому <b>P выбирать не приходится</b> — оно обязательное. Реальный выбор всегда между C и A в момент разрыва.</p>
+ <ul>
+ <li><b>CP</b> — при разрыве отказываем в обслуживании, но не отдаём неверные данные. Банковские балансы, списания.</li>
+ <li><b>AP</b> — продолжаем отвечать, возможно устаревшими данными. Лента, каталог, рекомендации.</li>
+ </ul>
+ <p>Развитие темы — PACELC: даже без разрыва есть выбор между задержкой (Latency) и согласованностью.</p>`},
+
+{c:'Архитектура', q:'Что такое кэш и в чём сложность его использования?',
+ en:'What is caching and what makes it hard?',
+ a:`<p>Кэш — быстрое промежуточное хранилище часто запрашиваемых данных: снижает задержку и нагрузку на основную БД.</p>
+ <p><b>Стратегии:</b> cache-aside (приложение само читает и заполняет), read-through, write-through (пишем сразу в оба), write-behind (в кэш сразу, в БД отложенно).</p>
+ <p><b>Инвалидация:</b> по TTL, по событию изменения, вручную.</p>
+ <p><b>Проблемы:</b></p>
+ <ul>
+ <li>устаревшие данные — главная опасность в финтехе;</li>
+ <li>cache stampede — истёк TTL у популярного ключа, и все запросы разом ушли в БД;</li>
+ <li>рассогласование между кэшем и источником.</li>
+ </ul>
+ <p class="key">Позиция аналитика: для каждого кэшируемого объекта надо явно зафиксировать допустимое время устаревания. Баланс счёта не кэшируется вообще, справочник валют — на сутки. Это бизнес-решение, а не техническое.</p>`},
+
+{c:'Архитектура', q:'Что такое API Gateway и зачем он нужен?',
+ en:'What is an API Gateway and why is it needed?',
+ a:`<p>Единая точка входа для внешних клиентов, за которой скрыт набор внутренних сервисов.</p>
+ <p><b>Что берёт на себя:</b> маршрутизация, аутентификация и проверка токена, rate limiting, агрегация ответов нескольких сервисов, преобразование протоколов (REST снаружи → gRPC внутри), логирование и трассировка, версионирование.</p>
+ <p class="key">Ключевая мысль: gateway убирает дублирование сквозной логики из каждого сервиса и скрывает внутреннюю структуру системы от клиента — сервисы можно дробить и переносить, не ломая внешний контракт.</p>
+ <p>Риск: превращается в единую точку отказа и в «свалку» бизнес-логики, которой там быть не должно.</p>`},
+
+{c:'Архитектура', q:'Как масштабировать систему?',
+ en:'How do you scale a system?',
+ a:`<ul>
+ <li><b>Вертикально</b> — увеличить ресурсы одного сервера. Просто, но упирается в физический потолок и не даёт отказоустойчивости.</li>
+ <li><b>Горизонтально</b> — добавить инстансы за балансировщиком. Сложнее, но масштабируется дальше и переживает отказ узла. Требует stateless-сервисов.</li>
+ </ul>
+ <p><b>Для БД:</b> репликация (мастер на запись, реплики на чтение), шардирование (данные разрезаны по ключу), партиционирование таблиц, вынос чтения в отдельное хранилище (CQRS).</p>
+ <p class="key">Порядок действий, который стоит проговорить: сначала измерить и найти узкое место, потом кэш и индексы, потом реплики чтения, и только затем шардирование. Шардирование сразу — типичное преждевременное усложнение.</p>`},
+
+/* ============ Требования и нотации ============ */
+{c:'Требования', q:'Какие уровни требований вы знаете?',
+ en:'What levels of requirements do you know?',
+ a:`<p>Классификация Карла Вигерса:</p>
+ <ul>
+ <li><b>Бизнес-требования</b> — зачем компании продукт, какую выгоду она получит. Аудитория: спонсор проекта. Документ: Vision &amp; Scope.</li>
+ <li><b>Пользовательские</b> — что пользователь сможет делать. Аудитория: пользователи. Документ: Use Case или User Story.</li>
+ <li><b>Функциональные</b> — что должна делать система, чтобы это стало возможным. Аудитория: команда разработки. Документ: SRS.</li>
+ </ul>
+ <p>Отдельно стоят <b>нефункциональные</b> требования, <b>бизнес-правила</b> и <b>ограничения</b>.</p>
+ <p class="key">Сильный ход: показать связность уровней. Бизнес-требование «снизить долю отказов оплаты» → пользовательское «клиент может повторить платёж другим способом» → функциональное «при коде отказа 05 система показывает выбор альтернативного метода». Интервьюеру важно, что ты видишь трассировку сверху вниз.</p>`},
+
+{c:'Требования', q:'Что такое нефункциональные требования? Приведите примеры.',
+ en:'What are non-functional requirements? Give examples.',
+ a:`<p>Функциональные отвечают «что система делает», нефункциональные — «насколько хорошо».</p>
+ <ul>
+ <li><b>Производительность</b>: время отклика 95-го перцентиля не более 300 мс при 500 RPS.</li>
+ <li><b>Надёжность и доступность</b>: 99,95% в месяц, RPO 5 минут, RTO 30 минут.</li>
+ <li><b>Безопасность</b>: данные карт не хранятся, ПДн шифруются, доступ по ролям.</li>
+ <li><b>Масштабируемость</b>: рост нагрузки втрое без изменения архитектуры.</li>
+ <li><b>Удобство использования</b>, <b>совместимость</b> (браузеры, версии ОС), <b>сопровождаемость</b>, <b>соответствие</b> (152-ФЗ, PCI DSS).</li>
+ </ul>
+ <p class="key">Главное правило: нефункциональное требование обязано быть <b>измеримым</b>. «Система должна работать быстро» — не требование. «95% запросов обрабатываются менее чем за 300 мс при нагрузке 500 RPS» — требование. Именно на этом вас и проверяют.</p>`},
+
+{c:'Требования', q:'Каким должно быть хорошее требование?',
+ en:'What makes a good requirement?',
+ a:`<ul>
+ <li><b>Полное</b> — не требует додумывания.</li>
+ <li><b>Непротиворечивое</b> — не конфликтует с другими.</li>
+ <li><b>Недвусмысленное</b> — читается одним способом всеми участниками.</li>
+ <li><b>Проверяемое</b> — можно написать тест-кейс.</li>
+ <li><b>Необходимое</b> — за ним стоит реальная потребность.</li>
+ <li><b>Осуществимое</b> — реализуемо в рамках ограничений.</li>
+ <li><b>Приоритизированное</b>.</li>
+ <li><b>Прослеживаемое</b> — связано с источником и с реализацией.</li>
+ </ul>
+ <p class="key">Если попросят назвать одно — называй <b>проверяемость</b>. Если по формулировке нельзя написать тест, требование негодное, и это автоматически ловит и двусмысленность, и неизмеримость.</p>`},
+
+{c:'Требования', q:'Какие техники выявления требований вы применяли?',
+ en:'Which requirements elicitation techniques have you used?',
+ a:`<ul>
+ <li><b>Интервью</b> — основная техника; бывает структурированное, полуструктурированное, свободное.</li>
+ <li><b>Анализ документов</b> — регламенты, НПА, текущая документация, отчёты.</li>
+ <li><b>Наблюдение</b> — смотрим, как пользователь реально работает; ловит то, о чём он не расскажет, потому что «это же очевидно».</li>
+ <li><b>Воркшоп</b> — совместная сессия с несколькими стейкхолдерами, хорошо снимает противоречия на месте.</li>
+ <li><b>Анкетирование</b> — когда пользователей много.</li>
+ <li><b>Прототипирование</b> — обсуждать макет проще, чем текст.</li>
+ <li><b>Анализ конкурентов</b> и <b>анализ данных существующей системы</b>.</li>
+ </ul>
+ <p class="key">Отвечай через свой опыт: в Heartz ты делал RFM-сегментацию и нашёл сломанную интеграцию с почтовой платформой — это анализ данных как источник требований. Такой пример сильнее любого списка техник.</p>`},
+
+{c:'Требования', q:'Use Case или User Story — в чём разница?',
+ en:'Use Case or User Story — what is the difference?',
+ a:`<p><b>User Story</b> — короткая формулировка потребности: «Как <i>роль</i>, я хочу <i>действие</i>, чтобы <i>ценность</i>». Это <b>приглашение к разговору</b>, а не спецификация. Детали живут в критериях приёмки.</p>
+ <p><b>Use Case</b> — развёрнутый сценарий взаимодействия: актор, предусловия, основной поток по шагам, альтернативные потоки, исключения, постусловия.</p>
+ <table style="width:100%;border-collapse:collapse;font-size:14px;margin-top:8px">
+ <tr><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>User Story</b></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>Use Case</b></td></tr>
+ <tr><td style="padding:4px 8px">Объём</td><td style="padding:4px 8px">1–3 строки</td><td style="padding:4px 8px">страница и больше</td></tr>
+ <tr><td style="padding:4px 8px">Подход</td><td style="padding:4px 8px">Agile</td><td style="padding:4px 8px">классический, ближе к waterfall</td></tr>
+ <tr><td style="padding:4px 8px">Фокус</td><td style="padding:4px 8px">ценность</td><td style="padding:4px 8px">полнота сценариев, включая исключения</td></tr>
+ </table>
+ <p class="key">Практика: чем выше цена ошибки, тем ближе к Use Case. В платёжном сценарии одной user story мало — нужны все ветки отказов, и именно их отсутствие чаще всего приводит к инцидентам.</p>
+ <p>Есть ещё <b>Job Story</b>: «Когда <i>ситуация</i>, я хочу <i>мотив</i>, чтобы <i>результат</i>» — смещает фокус с роли на контекст.</p>`},
+
+{c:'Требования', q:'Что такое критерии приёмки? Чем они отличаются от Definition of Done?',
+ en:'What are acceptance criteria and how do they differ from Definition of Done?',
+ a:`<p><b>Acceptance Criteria</b> — условия, при которых конкретная история считается реализованной. Пишутся для <b>каждой</b> истории отдельно.</p>
+ <p><b>Definition of Done</b> — единый для всей команды чек-лист качества, одинаковый для всех задач: код отревьюен, тесты написаны, документация обновлена, задача развёрнута на стенде.</p>
+ <p>Формат Gherkin для критериев:</p>
+ <pre><code>Given у клиента на счёте 500 ₽
+When он пытается перевести 1000 ₽
+Then система отклоняет операцию
+ And показывает сообщение о недостатке средств
+ And баланс остаётся 500 ₽</code></pre>
+ <p class="key">Одной фразой: AC отвечают «сделали ли мы нужное», DoD — «сделали ли мы качественно». AC свои у каждой истории, DoD один на команду.</p>`},
+
+{c:'Требования', q:'Какие UML-диаграммы вы используете и когда?',
+ en:'Which UML diagrams do you use and when?',
+ a:`<ul>
+ <li><b>Sequence</b> — обмен сообщениями между системами во времени. Главная диаграмма СА для описания интеграций.</li>
+ <li><b>Use Case</b> — акторы и функции системы, границы системы. Для верхнеуровневого согласования с бизнесом.</li>
+ <li><b>Class / ER</b> — структура данных и связи.</li>
+ <li><b>Activity</b> — алгоритм или процесс с ветвлениями.</li>
+ <li><b>State machine</b> — жизненный цикл объекта: статусы заявки, платежа, договора и допустимые переходы.</li>
+ <li><b>Component / Deployment</b> — из чего состоит система и где что развёрнуто.</li>
+ </ul>
+ <p class="key">Для финтеха две главные — <b>Sequence</b> и <b>State machine</b>. Statechart статусов платежа (создан → авторизован → списан → возвращён, плюс отказы) — типовое задание на тестовом. Скажи, что всегда описываешь <b>недопустимые</b> переходы тоже: это ловит половину багов до разработки.</p>`},
+
+{c:'Требования', q:'Расскажите про BPMN. Какие элементы знаете?',
+ en:'Tell me about BPMN. Which elements do you know?',
+ a:`<p>BPMN 2.0 — нотация моделирования бизнес-процессов, понятная и бизнесу, и разработчику, и исполнимая в движке (Camunda).</p>
+ <ul>
+ <li><b>События</b>: стартовое, промежуточное, конечное; по типу — сообщение, таймер, ошибка.</li>
+ <li><b>Задачи</b>: пользовательская, сервисная, скриптовая, отправка/получение сообщения.</li>
+ <li><b>Шлюзы</b>: эксклюзивный XOR (одна ветка), параллельный AND (все ветки), инклюзивный OR (одна и более), событийный.</li>
+ <li><b>Пулы и дорожки</b>: пул — отдельный участник процесса, дорожка — роль внутри участника.</li>
+ <li><b>Потоки</b>: sequence flow внутри пула, message flow — только между пулами.</li>
+ </ul>
+ <p class="key">Ошибка, которую ищут проверяющие: sequence flow, проведённый между двумя пулами. Между пулами возможен только поток сообщений. Второе — незакрытый шлюз: если разветвили XOR, ветки надо свести обратно.</p>`},
+
+{c:'Требования', q:'Что такое трассируемость требований?',
+ en:'What is requirements traceability?',
+ a:`<p>Возможность проследить требование в обе стороны: вверх — к бизнес-цели и источнику, вниз — к постановке задачи, коду и тест-кейсам.</p>
+ <p><b>Зачем:</b></p>
+ <ul>
+ <li>оценить влияние изменения — что сломается, если поменять это требование;</li>
+ <li>убедиться, что все требования покрыты тестами;</li>
+ <li>найти «сиротские» функции, за которыми не стоит ни одной бизнес-цели;</li>
+ <li>обязательное условие в регулируемых отраслях — банки, медицина.</li>
+ </ul>
+ <p>Инструмент — матрица трассируемости, на практике чаще связи между задачами в Jira/Confluence.</p>`},
+
+{c:'Требования', q:'Что делать, если требования двух стейкхолдеров противоречат друг другу?',
+ en:'What do you do if two stakeholders have conflicting requirements?',
+ a:`<p>Отвечай процессом, а не «пойду к руководителю»:</p>
+ <ol>
+ <li><b>Зафиксировать противоречие письменно</b> — часто оно кажущееся, стороны говорят разными словами об одном.</li>
+ <li><b>Докопаться до потребности за требованием</b>. Конфликт обычно на уровне решений, а не целей: оба хотят снизить отток, но предлагают разное.</li>
+ <li><b>Оценить влияние каждого варианта</b> — на метрику, на сроки, на другие требования.</li>
+ <li><b>Свести стороны на воркшоп</b> с фактами, а не переносить сообщения между ними.</li>
+ <li>Если не сходятся — <b>эскалировать владельцу продукта</b> с готовыми вариантами и последствиями, а не с вопросом «что делать».</li>
+ <li><b>Задокументировать решение</b> и кто его принял.</li>
+ </ol>
+ <p class="key">Ключевая фраза: аналитик не выбирает победителя, он делает выбор осознанным и фиксирует его. Пункты 2 и 5 — то, что отличает senior-мышление.</p>`},
+
+/* ============ Процессы ============ */
+{c:'Процессы', q:'Расскажите про Scrum: роли, артефакты, события.',
+ en:'Tell me about Scrum: roles, artifacts, events.',
+ a:`<p><b>Роли:</b> Product Owner (что делаем и в каком порядке), Scrum Master (процесс и устранение препятствий), команда разработки (как делаем).</p>
+ <p><b>Артефакты:</b> Product Backlog, Sprint Backlog, инкремент.</p>
+ <p><b>События:</b> планирование спринта, ежедневный стендап, обзор спринта (демо), ретроспектива. Груминг/refinement формально не событие Scrum, но проводится всегда.</p>
+ <p class="key">Место аналитика: в Scrum нет роли «системный аналитик» — он часть команды разработки. Его основная работа приходится на refinement: подготовить истории так, чтобы к планированию они были готовы к оценке. Ответ через это показывает, что ты работал в процессе, а не читал гайд.</p>`},
+
+{c:'Процессы', q:'Чем Scrum отличается от Kanban?',
+ en:'How does Scrum differ from Kanban?',
+ a:`<table style="width:100%;border-collapse:collapse;font-size:14px">
+ <tr><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>Scrum</b></td><td style="padding:4px 8px;border-bottom:1px solid #2a2f3a"><b>Kanban</b></td></tr>
+ <tr><td style="padding:4px 8px">Ритм</td><td style="padding:4px 8px">фиксированные спринты</td><td style="padding:4px 8px">непрерывный поток</td></tr>
+ <tr><td style="padding:4px 8px">Роли</td><td style="padding:4px 8px">заданы</td><td style="padding:4px 8px">не задаёт</td></tr>
+ <tr><td style="padding:4px 8px">Изменения</td><td style="padding:4px 8px">не в середине спринта</td><td style="padding:4px 8px">в любой момент</td></tr>
+ <tr><td style="padding:4px 8px">Ключевая метрика</td><td style="padding:4px 8px">velocity</td><td style="padding:4px 8px">lead time, cycle time</td></tr>
+ <tr><td style="padding:4px 8px">Ограничение</td><td style="padding:4px 8px">объём спринта</td><td style="padding:4px 8px">WIP-лимит на колонку</td></tr>
+ </table>
+ <p class="key">Когда что: Scrum — продуктовая разработка с планируемым объёмом. Kanban — поток непредсказуемых входящих задач: поддержка, сопровождение, интеграционная команда. Главная идея Kanban — <b>ограничение незавершённой работы</b>, а не доска с колонками.</p>`},
+
+{c:'Процессы', q:'Что такое MVP и как определить его состав?',
+ en:'What is an MVP and how do you define its scope?',
+ a:`<p>MVP — минимальная версия продукта, которая уже даёт ценность пользователю и позволяет проверить ключевую гипотезу.</p>
+ <p><b>Как определять состав:</b> отталкиваться от гипотезы, а не от списка «хотелок». Что именно мы проверяем, какой метрикой измерим, какого значения достаточно, чтобы продолжать.</p>
+ <p>Инструменты приоритизации: MoSCoW (Must / Should / Could / Won't), RICE, Kano, матрица «ценность-усилия».</p>
+ <p class="key">Частая ошибка: MVP как «продукт похуже». Правильно — узкий по охвату, но полноценный по выбранному сценарию. Классическая иллюстрация: не половина автомобиля, а самокат, который уже везёт.</p>`},
+
+/* ============ Финтех-домен ============ */
+{c:'Финтех', q:'Как устроен процесс оплаты картой? Кто участники?',
+ en:'How does a card payment work? Who are the participants?',
+ a:`<p><b>Участники:</b> держатель карты · мерчант (магазин) · банк-эквайер (обслуживает мерчанта) · платёжная система (Visa, Mastercard, МИР) · банк-эмитент (выпустил карту) · платёжный шлюз/процессинг.</p>
+ <p><b>Поток:</b></p>
+ <ol>
+ <li>Клиент вводит данные карты на странице оплаты.</li>
+ <li>Шлюз передаёт запрос эквайеру, тот — в платёжную систему, та — эмитенту.</li>
+ <li>Эмитент проверяет средства и лимиты, <b>авторизует</b> и <b>холдирует</b> сумму. Деньги ещё не списаны.</li>
+ <li>Мерчант делает <b>capture</b> (списание) — обычно при отгрузке товара.</li>
+ <li><b>Клиринг и сеттлмент</b> — взаимозачёт и реальный перевод денег между банками, чаще всего на следующий день.</li>
+ </ol>
+ <p class="key">Ключевое различие, которое проверяют: <b>авторизация ≠ списание</b>. Между ними может пройти несколько дней, холд может истечь. Отсюда статусная модель платежа и необходимость сверок.</p>`},
+
+{c:'Финтех', q:'Что такое 3-D Secure?',
+ en:'What is 3-D Secure?',
+ a:`<p>Протокол дополнительной аутентификации держателя карты при онлайн-оплате: подтверждение через код из SMS, push или биометрию в приложении банка.</p>
+ <p>«Три домена» — эквайер, эмитент и инфраструктура платёжной системы между ними.</p>
+ <p><b>3DS 2.0</b> добавил frictionless flow: эмитент по совокупности данных о транзакции оценивает риск и может пропустить платёж без запроса кода.</p>
+ <p class="key">Что важно для аналитика: при успешном 3DS происходит <b>перенос ответственности</b> (liability shift) — при оспаривании операции убыток несёт эмитент, а не мерчант. Это бизнес-смысл протокола, и именно его хотят услышать, а не описание SMS-кода.</p>`},
+
+{c:'Финтех', q:'Что такое двойная запись и проводки?',
+ en:'What is double-entry bookkeeping?',
+ a:`<p>Принцип бухгалтерского учёта: каждая операция отражается одновременно по дебету одного счёта и кредиту другого на одну и ту же сумму. Сумма дебетов всегда равна сумме кредитов.</p>
+ <p><b>Проводка</b> — запись об этом двойном изменении.</p>
+ <p class="key">Почему это спрашивают на СА: в платёжных системах баланс — не поле, которое «увеличивают». Баланс есть производная от неизменяемого журнала проводок (ledger). Записи в леджер только добавляются, никогда не редактируются и не удаляются. Ошибочная операция исправляется <b>сторнирующей</b> проводкой.</p>
+ <p>Практический вывод для проектирования: append-only таблица операций, баланс — либо агрегат, либо денормализованное поле, пересчитываемое строго транзакционно.</p>`},
+
+{c:'Финтех', q:'Что такое сверка (реконсиляция) и зачем она нужна?',
+ en:'What is reconciliation and why is it needed?',
+ a:`<p>Регулярное сопоставление данных об операциях из разных источников: своя БД против реестра эквайера, против выписки банка, против данных платёжной системы.</p>
+ <p><b>Зачем:</b> найти расхождения — операция есть у нас, но нет у банка; суммы не совпали; статус разошёлся; двойное списание.</p>
+ <p><b>Что должен описать аналитик:</b> периодичность (обычно раз в сутки за операционный день), ключ сопоставления, допустимые расхождения, классификация типов расхождений, процесс разбора и кто за него отвечает, автоматические корректировки.</p>
+ <p class="key">Формулировка: сверка — это признание того, что распределённая система <b>согласована лишь в конечном счёте</b>. Расхождения не аномалия, а норма, и процесс их разбора надо спроектировать заранее.</p>`},
+
+{c:'Финтех', q:'Спроектируйте перевод денег между счетами. Что учтёте?',
+ en:'Design a money transfer between two accounts. What would you consider?',
+ a:`<p>Это самый частый кейсовый вопрос в финтехе. Отвечай структурно:</p>
+ <ol>
+ <li><b>Проверки до операции</b>: счета существуют и активны, валюты совпадают или есть курс конвертации, достаточно средств с учётом холдов, лимиты, не заблокирован ли счёт, антифрод.</li>
+ <li><b>Атомарность</b>: списание и зачисление в одной транзакции; если счета в разных сервисах — Saga с компенсацией.</li>
+ <li><b>Идемпотентность</b>: <code>Idempotency-Key</code> от клиента, повтор не создаёт второй перевод.</li>
+ <li><b>Конкурентность</b>: два параллельных перевода с одного счёта — блокировка строки или оптимистичная блокировка по версии, иначе уйдёт в минус.</li>
+ <li><b>Статусная модель</b>: created → validated → debited → credited → completed, плюс failed и compensated. Промежуточные статусы видны пользователю.</li>
+ <li><b>Леджер</b>: проводки append-only, баланс выводим и сверяем.</li>
+ <li><b>Аудит и логирование</b>: кто, когда, откуда; ПДн и номера карт маскируются.</li>
+ <li><b>Уведомления</b> и <b>сверка</b> по итогам дня.</li>
+ </ol>
+ <p class="key">Пункты 3, 4 и 5 — то, что отличает сильного кандидата. Даже если остальное расскажешь бегло, назови их обязательно.</p>`},
+
+{c:'Финтех', q:'Что такое СБП и чем она отличается от карточных платежей?',
+ en:'What is the Faster Payments System (SBP) and how does it differ from card payments?',
+ a:`<p>Система быстрых платежей — инфраструктура Банка России для мгновенных переводов между счетами разных банков по номеру телефона, а также оплаты по QR-коду.</p>
+ <p><b>Отличия от карт:</b></p>
+ <ul>
+ <li>перевод идёт напрямую между счетами, минуя карточные платёжные системы;</li>
+ <li>расчёты в реальном времени, а не клирингом на следующий день;</li>
+ <li>заметно ниже комиссия для мерчанта — отсюда интерес бизнеса;</li>
+ <li>нет привычного механизма чарджбэка, оспаривание устроено иначе;</li>
+ <li>оператор и расчётный центр — ЦБ, операционный клиринговый центр — НСПК.</li>
+ </ul>
+ <p class="key">Практическое следствие для проектирования: возврат по СБП — это <b>отдельная операция возврата</b>, а не отмена исходной. Логика возвратов проектируется иначе, чем для карт.</p>`},
+
+{c:'Финтех', q:'Какие требования регуляторов влияют на вашу работу?',
+ en:'Which regulatory requirements affect your work?',
+ a:`<ul>
+ <li><b>152-ФЗ</b> — персональные данные: согласие на обработку, локализация баз данных россиян на территории РФ, ограничение доступа, обезличивание в тестовых средах.</li>
+ <li><b>115-ФЗ</b> — противодействие отмыванию: идентификация клиента (KYC), обязательный контроль операций свыше порога, признаки подозрительных операций, блокировки.</li>
+ <li><b>161-ФЗ</b> — национальная платёжная система, правила переводов, сроки рассмотрения обращений.</li>
+ <li><b>PCI DSS</b> — стандарт безопасности карточных данных: PAN не хранится в открытом виде, маскирование, сегментация сети, ограничение доступа.</li>
+ <li><b>GDPR</b> — если работаешь на ЕС: право на удаление, право на переносимость, privacy by design.</li>
+ </ul>
+ <p class="key">Как формулировать: «Регуляторные требования для меня — это нефункциональные требования и бизнес-правила, которые я закладываю в постановку с самого начала: маскирование в логах, хранение согласий, аудит доступа. Дешевле спроектировать, чем переделывать после аудита.» Знание про маскирование PAN и обезличивание тестовых данных выделяет кандидата сразу.</p>`},
+
+/* ============ Поведенческие и английский ============ */
+{c:'Поведенческие', q:'Расскажите о себе.',
+ en:'Tell me about yourself.',
+ a:`<p>Структура на 90 секунд: <b>кто я сейчас → откуда пришёл и почему → что умею подтверждённо → почему именно эта вакансия</b>.</p>
+ <p>Твоя канва: экономика и финансы по образованию, пять лет в бизнес-операциях и аналитике, где работа фактически состояла в сборе требований, описании процессов и постановке задач разработчикам. Дальше — осознанный переход в системный анализ, потому что интересна не только бизнес-сторона, но и то, как система устроена внутри. Курс Практикума, пет-проект Accord, который доведён до работающего приложения.</p>
+ <p class="key">Правило: никаких извинений за отсутствие «коммерческого опыта в IT». Ты не начинаешь с нуля — ты переносишь смежный опыт. Тон утвердительный, без «я только учусь».</p>
+ <p class="trap">Не пересказывай резюме по хронологии. Ответ должен вести к вакансии, а не к концу списка мест работы.</p>`},
+
+{c:'Поведенческие', q:'Почему вы уходите из бизнес-аналитики в системную?',
+ en:'Why are you moving from business analytics into systems analysis?',
+ a:`<p>Рабочая формулировка: «В маркетинговой и операционной аналитике я упирался в один и тот же барьер — я видел, что нужно изменить в системе, но не мог описать это на языке, который команда разработки примет без переспрашивания. Системный анализ — это как раз навык перевода между бизнесом и разработкой, и он опирается на то, что я уже умею: разбираться в процессе, находить противоречия, доводить решение до внедрения.»</p>
+ <p class="key">Хорошая причина всегда «к», а не «от». Не «надоел маркетинг» и не «в IT платят больше», а «хочу глубже в устройство систем».</p>
+ <p>Приготовь один конкретный эпизод: в Heartz ты нашёл сломанную интеграцию с почтовой платформой, из-за которой большая часть покупателей была недостижима. Это ровно работа системного аналитика — обнаружил дефект интеграции, локализовал причину, оценил влияние на бизнес.</p>`},
+
+{c:'Поведенческие', q:'Расскажите про самый сложный проект.',
+ en:'Tell me about the most challenging project you have worked on.',
+ a:`<p>Отвечай по <b>STAR</b>: Situation → Task → Action → Result. Результат обязательно в цифрах.</p>
+ <p>Готовые кандидаты из твоего опыта:</p>
+ <ul>
+ <li><b>Heartz, RFM-сегментация</b>: выяснилось, что ~23% клиентов дают больше половины выручки. Situation — непонятно, на кого направлять удержание. Action — построил сегментацию и нашёл сломанную интеграцию. Result — цифры.</li>
+ <li><b>Speed Art Studio</b>: снижение CAC втрое, финансовая модель для операционных решений.</li>
+ <li><b>Accord</b>: пет-проект от идеи до работающего приложения — React/Vite, Supabase/PostgreSQL, Capacitor, CI на GitHub Actions. Здесь можно говорить про модель данных и архитектуру собственными руками.</li>
+ </ul>
+ <p class="key">Про Accord держи наготове: схема БД, почему такие связи, как устроена авторизация, что бы переделал сейчас. Это единственный проект, где ты можешь показать техническое решение целиком, и его будут расспрашивать подробно.</p>`},
+
+{c:'Поведенческие', q:'Что делать, если разработчик говорит, что ваше требование невозможно реализовать?',
+ en:'What if a developer says your requirement cannot be implemented?',
+ a:`<ol>
+ <li>Выяснить, что именно означает «невозможно»: технически неосуществимо, слишком дорого по срокам, ломает архитектуру или просто неудобно.</li>
+ <li>Вернуться к <b>потребности</b> за требованием. Чаще всего невозможен конкретный способ, а не сама цель.</li>
+ <li>Попросить у разработчика альтернативу: «какое решение этой задачи ты считаешь реализуемым?»</li>
+ <li>Сравнить варианты по влиянию на пользователя и по трудозатратам, вынести выбор владельцу продукта с последствиями каждого.</li>
+ <li>Зафиксировать решение в постановке.</li>
+ </ol>
+ <p class="key">Тон ответа важнее содержания: разработчик — источник информации, а не препятствие. Кандидаты, которые отвечают «настою на своём» или «пойду к менеджеру», проваливают этот вопрос.</p>`},
+
+{c:'Поведенческие', q:'Какие вопросы вы зададите нам?',
+ en:'What questions do you have for us?',
+ a:`<p>Не задать вопросов — минус. Держи 4–5 готовых:</p>
+ <ul>
+ <li>Как в команде устроен процесс от идеи до релиза, кто пишет постановку и кто её принимает?</li>
+ <li>Какие артефакты обязательны — SRS, спецификация API, диаграммы? Есть ли принятый шаблон?</li>
+ <li>С какими системами и интеграциями предстоит работать в первую очередь?</li>
+ <li>Как выглядит успешный испытательный срок — что должно быть сделано через три месяца?</li>
+ <li>Кто будет наставником и как устроена обратная связь?</li>
+ </ul>
+ <p class="key">Вопрос про артефакты и шаблоны производит лучшее впечатление: он показывает, что ты понимаешь, из чего состоит работа аналитика, а не только интересуешься условиями.</p>`},
+
+{c:'Поведенческие', q:'Как рассказать о себе на английском?',
+ en:'Introduce yourself in English.',
+ a:`<p>Заготовка, которую стоит довести до автоматизма:</p>
+ <p style="color:#c8d3e3;font-style:italic">"I have a background in economics and finance, and about five years in business operations and analytics. In practice a large part of that work was systems analysis — gathering requirements from stakeholders, mapping processes, and writing specifications for developers. I decided to move into systems analysis deliberately: I'm more interested in how the system works underneath than in the reporting layer on top. Right now I'm completing a systems analyst programme, and I've built a subscription-management app end to end — React on the front, PostgreSQL and Supabase on the back — which is where I got hands-on with data modelling and API design."</p>
+ <p class="key">Три правила для собеседования на английском:</p>
+ <ul>
+ <li>Короткие предложения. Длинные разваливаются под стрессом.</li>
+ <li>Не переводи с русского — заучивай сразу английские блоки целиком.</li>
+ <li>Если не понял вопрос, переспрашивай: <i>"Could you rephrase that?"</i> Это нормально и лучше, чем ответить не на то.</li>
+ </ul>
+ <p>Полезные связки: <i>"Let me walk you through it step by step"</i> · <i>"The trade-off here is…"</i> · <i>"It depends on whether…"</i> · <i>"I'd want to clarify one thing first"</i> · <i>"Correct me if I'm wrong, but…"</i></p>`},
+
+];
+
+const CATS = ['SQL','Данные','API','Асинхрон','Архитектура','Требования','Процессы','Финтех','Поведенческие'];
+let active = 'Все';
+let query = '';
+
+const $list = document.getElementById('list');
+const $chips = document.getElementById('chips');
+const $stat = document.getElementById('stat');
+
+function chip(label, count){
+  const b = document.createElement('div');
+  b.className = 'chip' + (label === active ? ' on' : '');
+  b.textContent = label + ' · ' + count;
+  b.onclick = () => { active = label; render(); };
+  return b;
+}
+
+function buildChips(){
+  $chips.innerHTML = '';
+  $chips.appendChild(chip('Все', Q.length));
+  CATS.forEach(c => {
+    const n = Q.filter(q => q.c === c).length;
+    if (n) $chips.appendChild(chip(c, n));
+  });
+}
+
+function esc(s){ return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+
+function render(){
+  buildChips();
+  $list.innerHTML = '';
+  const ql = query.trim().toLowerCase();
+  let shown = 0, lastCat = null;
+
+  Q.forEach((item, i) => {
+    if (active !== 'Все' && item.c !== active) return;
+    if (ql && !(item.q + ' ' + item.en + ' ' + item.a).toLowerCase().includes(ql)) return;
+
+    if (item.c !== lastCat){
+      const h = document.createElement('div');
+      h.className = 'sec';
+      h.textContent = item.c;
+      $list.appendChild(h);
+      lastCat = item.c;
+    }
+
+    shown++;
+    const card = document.createElement('div');
+    card.className = 'q';
+    card.innerHTML =
+      '<div class="qh">' +
+        '<span class="num">' + (i + 1) + '</span>' +
+        '<span class="qt"><b>' + esc(item.q) + '</b>' +
+          '<span class="en">' + esc(item.en) + '</span></span>' +
+      '</div>' +
+      '<div class="a">' + item.a + '</div>';
+    card.querySelector('.qh').onclick = () => card.classList.toggle('open');
+    $list.appendChild(card);
+  });
+
+  $stat.textContent = shown + ' из ' + Q.length;
+  if (!shown) $list.innerHTML = '<div class="sec">Ничего не найдено</div>';
+}
+
+document.getElementById('search').addEventListener('input', e => { query = e.target.value; render(); });
+document.getElementById('expand').onclick = () =>
+  document.querySelectorAll('.q').forEach(q => q.classList.add('open'));
+document.getElementById('collapse').onclick = () =>
+  document.querySelectorAll('.q').forEach(q => q.classList.remove('open'));
+
+render();
+</script>
+</body>
+</html>

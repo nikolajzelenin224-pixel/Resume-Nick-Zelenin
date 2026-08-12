@@ -12,13 +12,12 @@
 
 DROP SCHEMA IF EXISTS fintech CASCADE;
 CREATE SCHEMA fintech;
-SET search_path TO fintech, public;
 
 -- ---------------------------------------------------------------------
 -- Справочники и основные сущности
 -- ---------------------------------------------------------------------
 
-CREATE TABLE clients (
+CREATE TABLE fintech.clients (
     client_id    bigserial PRIMARY KEY,
     full_name    text        NOT NULL,
     email        text        NOT NULL UNIQUE,
@@ -29,9 +28,9 @@ CREATE TABLE clients (
     CONSTRAINT clients_kyc_chk CHECK (kyc_status IN ('pending','verified','rejected'))
 );
 
-CREATE TABLE accounts (
+CREATE TABLE fintech.accounts (
     account_id   bigserial PRIMARY KEY,
-    client_id    bigint      NOT NULL REFERENCES clients(client_id),
+    client_id    bigint      NOT NULL REFERENCES fintech.clients(client_id),
     currency     char(3)     NOT NULL,
     balance      numeric(18,2) NOT NULL DEFAULT 0,
     status       text        NOT NULL DEFAULT 'active',     -- active | blocked | closed
@@ -41,7 +40,7 @@ CREATE TABLE accounts (
     CONSTRAINT accounts_balance_chk CHECK (balance >= 0)
 );
 
-CREATE TABLE merchants (
+CREATE TABLE fintech.merchants (
     merchant_id  bigserial PRIMARY KEY,
     name         text    NOT NULL,
     category     text    NOT NULL,
@@ -49,10 +48,10 @@ CREATE TABLE merchants (
     country      char(2) NOT NULL
 );
 
-CREATE TABLE payments (
+CREATE TABLE fintech.payments (
     payment_id       bigserial PRIMARY KEY,
-    account_id       bigint        NOT NULL REFERENCES accounts(account_id),
-    merchant_id      bigint        REFERENCES merchants(merchant_id),
+    account_id       bigint        NOT NULL REFERENCES fintech.accounts(account_id),
+    merchant_id      bigint        REFERENCES fintech.merchants(merchant_id),
     amount           numeric(18,2) NOT NULL,
     currency         char(3)       NOT NULL,
     status           text          NOT NULL,   -- created | authorized | captured | declined | refunded
@@ -69,10 +68,10 @@ CREATE TABLE payments (
 );
 
 -- Леджер: только добавление, ничего не редактируется и не удаляется
-CREATE TABLE transactions (
+CREATE TABLE fintech.transactions (
     txn_id     bigserial PRIMARY KEY,
-    payment_id bigint        REFERENCES payments(payment_id),
-    account_id bigint        NOT NULL REFERENCES accounts(account_id),
+    payment_id bigint        REFERENCES fintech.payments(payment_id),
+    account_id bigint        NOT NULL REFERENCES fintech.accounts(account_id),
     direction  char(1)       NOT NULL,          -- D = дебет, C = кредит
     amount     numeric(18,2) NOT NULL,
     posted_at  timestamptz   NOT NULL,
@@ -80,9 +79,9 @@ CREATE TABLE transactions (
     CONSTRAINT txn_amount_chk    CHECK (amount > 0)
 );
 
-CREATE TABLE refunds (
+CREATE TABLE fintech.refunds (
     refund_id  bigserial PRIMARY KEY,
-    payment_id bigint        NOT NULL REFERENCES payments(payment_id),
+    payment_id bigint        NOT NULL REFERENCES fintech.payments(payment_id),
     amount     numeric(18,2) NOT NULL,
     reason     text,
     created_at timestamptz   NOT NULL,
@@ -97,7 +96,7 @@ CREATE TABLE refunds (
 SELECT setseed(0.42);
 
 -- 200 клиентов
-INSERT INTO clients (full_name, email, phone, city, kyc_status, created_at)
+INSERT INTO fintech.clients (full_name, email, phone, city, kyc_status, created_at)
 SELECT
     (ARRAY['Анна','Борис','Виктор','Галина','Дмитрий','Елена','Жанна','Игорь',
            'Ксения','Леонид','Марина','Никита','Ольга','Павел','Роман','Светлана'])
@@ -116,7 +115,7 @@ SELECT
 FROM generate_series(1, 200) AS i;
 
 -- Счета: у части клиентов их несколько, у некоторых нет вообще
-INSERT INTO accounts (client_id, currency, balance, status, opened_at, closed_at)
+INSERT INTO fintech.accounts (client_id, currency, balance, status, opened_at, closed_at)
 SELECT
     c.client_id,
     (ARRAY['RUB','RUB','RUB','EUR','USD','RSD'])[1 + ((c.client_id + k) % 6)],
@@ -127,13 +126,13 @@ SELECT
     c.created_at + interval '1 day',
     CASE WHEN (c.client_id + k) % 31 = 0
          THEN c.created_at + interval '200 days' END
-FROM clients c
+FROM fintech.clients c
 CROSS JOIN generate_series(0, 2) AS k
 WHERE c.client_id % 7 <> 0            -- каждый седьмой клиент остаётся без счетов
   AND (k = 0 OR c.client_id % 3 = 0); -- второй и третий счёт — только у каждого третьего
 
 -- 40 мерчантов
-INSERT INTO merchants (name, category, mcc, country)
+INSERT INTO fintech.merchants (name, category, mcc, country)
 SELECT
     (ARRAY['Ozon','Wildberries','Yandex Market','Aviasales','Delivery Club','Netflix',
            'Spotify','Steam','IKEA','Zara','Apple','Booking'])[1 + (i % 12)]
@@ -144,7 +143,7 @@ SELECT
 FROM generate_series(1, 40) AS i;
 
 -- ~5000 платежей за 2025 год
-INSERT INTO payments (account_id, merchant_id, amount, currency, status, method,
+INSERT INTO fintech.payments (account_id, merchant_id, amount, currency, status, method,
                       decline_reason, idempotency_key,
                       created_at, authorized_at, captured_at)
 SELECT
@@ -165,7 +164,7 @@ SELECT
 FROM generate_series(1, 5000) AS i
 CROSS JOIN LATERAL (
     SELECT account_id, currency
-    FROM accounts
+    FROM fintech.accounts
     ORDER BY (account_id * 7919 + i) % 1000
     LIMIT 1
 ) AS a
@@ -183,25 +182,25 @@ CROSS JOIN LATERAL (
 ) AS s;
 
 -- Проводки: по одной паре дебет/кредит на каждый списанный платёж
-INSERT INTO transactions (payment_id, account_id, direction, amount, posted_at)
+INSERT INTO fintech.transactions (payment_id, account_id, direction, amount, posted_at)
 SELECT p.payment_id, p.account_id, 'D', p.amount, p.captured_at
-FROM payments p
+FROM fintech.payments p
 WHERE p.status IN ('captured','refunded');
 
-INSERT INTO transactions (payment_id, account_id, direction, amount, posted_at)
+INSERT INTO fintech.transactions (payment_id, account_id, direction, amount, posted_at)
 SELECT p.payment_id, p.account_id, 'C', p.amount, p.captured_at + interval '1 day'
-FROM payments p
+FROM fintech.payments p
 WHERE p.status = 'refunded';
 
 -- Возвраты
-INSERT INTO refunds (payment_id, amount, reason, created_at)
+INSERT INTO fintech.refunds (payment_id, amount, reason, created_at)
 SELECT
     p.payment_id,
     p.amount,
     (ARRAY['client_request','goods_not_delivered','duplicate_charge','fraud'])
       [1 + (p.payment_id % 4)],
     p.captured_at + interval '1 day'
-FROM payments p
+FROM fintech.payments p
 WHERE p.status = 'refunded';
 
 -- ---------------------------------------------------------------------
@@ -209,9 +208,9 @@ WHERE p.status = 'refunded';
 -- до и после добавления)
 -- ---------------------------------------------------------------------
 
-CREATE INDEX idx_accounts_client   ON accounts(client_id);
-CREATE INDEX idx_payments_account  ON payments(account_id);
-CREATE INDEX idx_payments_created  ON payments(created_at);
+CREATE INDEX idx_accounts_client   ON fintech.accounts(client_id);
+CREATE INDEX idx_payments_account  ON fintech.payments(account_id);
+CREATE INDEX idx_payments_created  ON fintech.payments(created_at);
 
 ANALYZE;
 
@@ -219,9 +218,9 @@ ANALYZE;
 -- Проверка: должно вывести непустые числа
 -- ---------------------------------------------------------------------
 
-SELECT 'clients'      AS table_name, count(*) FROM clients
-UNION ALL SELECT 'accounts',     count(*) FROM accounts
-UNION ALL SELECT 'merchants',    count(*) FROM merchants
-UNION ALL SELECT 'payments',     count(*) FROM payments
-UNION ALL SELECT 'transactions', count(*) FROM transactions
-UNION ALL SELECT 'refunds',      count(*) FROM refunds;
+SELECT 'clients'      AS table_name, count(*) FROM fintech.clients
+UNION ALL SELECT 'accounts',     count(*) FROM fintech.accounts
+UNION ALL SELECT 'merchants',    count(*) FROM fintech.merchants
+UNION ALL SELECT 'payments',     count(*) FROM fintech.payments
+UNION ALL SELECT 'transactions', count(*) FROM fintech.transactions
+UNION ALL SELECT 'refunds',      count(*) FROM fintech.refunds;
